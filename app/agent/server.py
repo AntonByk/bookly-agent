@@ -15,7 +15,7 @@ from app.agent.settings import settings
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = ROOT / "app" / "frontend"
 
-app = FastAPI(title="Bookly Agent", version="0.2.0")
+app = FastAPI(title="Bookly Agent", version="0.3.0")
 app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
 
 
@@ -137,23 +137,29 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
             detail = response.json().get("detail", response.text)
         except Exception:
             detail = response.text
+        if isinstance(detail, dict):
+            detail = detail.get("message", "Commerce rejected the action")
         raise HTTPException(response.status_code, detail)
 
     result = response.json()
     session.pending_actions.pop(action_id, None)
 
+    message = (
+        f"Done. Your return is {result['return_id']}. "
+        + (
+            f"Your £{result['refund_amount']:.2f} refund will be issued after Bookly receives the item."
+            if result["refund_timing"] == "after_item_received"
+            else f"Your £{result['refund_amount']:.2f} refund has been approved."
+        )
+    )
+    session.record_action_result("create_return", result)
+    session.record_message("assistant", message)
+
     return {
         "executed": True,
         "action_id": action_id,
         "result": result,
-        "message": (
-            f"Done. Your return is {result['return_id']}. "
-            + (
-                f"Your £{result['refund_amount']:.2f} refund will be issued after Bookly receives the item."
-                if result["refund_timing"] == "after_item_received"
-                else f"Your £{result['refund_amount']:.2f} refund has been approved."
-            )
-        ),
+        "message": message,
         "trace": [
             {
                 "type": "action_confirmed",

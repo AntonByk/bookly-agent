@@ -1,19 +1,51 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
-from openai import AsyncOpenAI
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AsyncOpenAI,
+    RateLimitError,
+)
 
 from app.agent.models import ChatResponse, TraceEvent
-from app.agent.prompts import SYSTEM_PROMPT
+from app.agent.prompts import build_system_prompt
 from app.agent.session import Session
 from app.agent.settings import settings
 from app.agent.tools import available_tools, execute_tool
 
 
 def _history_as_input(session: Session) -> list[dict[str, str]]:
-    return [{"role": item["role"], "content": item["content"]} for item in session.history]
+    items: list[dict[str, str]] = []
+    for event in session.history:
+        if event["type"] == "message":
+            items.append({"role": event["role"], "content": event["content"]})
+        elif event["type"] == "tool_result":
+            items.append(
+                {
+                    "role": "developer",
+                    "content": (
+                        f"Authoritative Bookly tool result from {event['tool']} earlier in this conversation:\n"
+                        f"{json.dumps(event['output'], separators=(',', ':'))}"
+                    ),
+                }
+            )
+        elif event["type"] == "action_result":
+            items.append(
+                {
+                    "role": "developer",
+                    "content": (
+                        f"A customer-confirmed application action ({event['action']}) executed outside the model. "
+                        "Treat this result as authoritative:\n"
+                        f"{json.dumps(event['result'], separators=(',', ':'))}"
+                    ),
+                }
+            )
+    return items
 
 
 def _usage_trace(response: Any) -> TraceEvent | None:
@@ -28,6 +60,79 @@ def _usage_trace(response: Any) -> TraceEvent | None:
             "output_tokens": getattr(usage, "output_tokens", None),
             "total_tokens": getattr(usage, "total_tokens", None),
         },
+    )
+
+
+async def _call_model(
+    client: AsyncOpenAI,
+    *,
+    input_items: list[Any],
+    tools: list[dict[str, Any]],
+    traces: list[TraceEvent],
+) -> Any:
+    for attempt in (1, 2):
+        try:
+            return await client.responses.create(
+                model=settings.openai_model,
+                instructions=build_system_prompt(settings.bookly_today),
+                input=input_items,
+                tools=tools,
+                max_output_tokens=900,
+            )
+        except (APITimeoutError, APIConnectionError, RateLimitError) as exc:
+            if attempt == 2:
+                raise
+            traces.append(
+                TraceEvent(
+                    type="model_retry",
+                    message="Transient model call failure; retrying once.",
+                    data={"error_type": type(exc).__name__},
+                )
+            )
+            await asyncio.sleep(0.4)
+        except APIStatusError as exc:
+            if exc.status_code >= 500 and attempt == 1:
+                traces.append(
+                    TraceEvent(
+                        type="model_retry",
+                        message="Model provider returned a server error; retrying once.",
+                        data={"status_code": exc.status_code},
+                    )
+                )
+                await asyncio.sleep(0.4)
+                continue
+            raise
+
+
+def _discard_unrendered_actions(session: Session, ui_actions: list[Any]) -> None:
+    for action in ui_actions:
+        if action.type == "confirm_action":
+            action_id = action.payload.get("action_id")
+            if action_id:
+                session.pending_actions.pop(action_id, None)
+
+
+def _model_failure_response(
+    session: Session,
+    traces: list[TraceEvent],
+    ui_actions: list[Any],
+    exc: Exception,
+) -> ChatResponse:
+    _discard_unrendered_actions(session, ui_actions)
+    message = "I'm having trouble reaching Bookly's AI service right now. No action was taken. Please try again."
+    traces.append(
+        TraceEvent(
+            type="model_error",
+            message="Model call failed safely; no consequential action was executed.",
+            data={"error_type": type(exc).__name__},
+        )
+    )
+    session.record_message("assistant", message)
+    return ChatResponse(
+        session_id=session.id,
+        message=message,
+        authenticated=session.authenticated,
+        trace=traces,
     )
 
 
@@ -48,7 +153,11 @@ async def run_agent_turn(
             trace=[TraceEvent(type="configuration_error", message="OPENAI_API_KEY is not configured.")],
         )
 
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    client = AsyncOpenAI(
+        api_key=settings.openai_api_key,
+        timeout=12.0,
+        max_retries=0,
+    )
     input_items: list[Any] = _history_as_input(session)
     if resume_after_auth:
         input_items.append(
@@ -80,13 +189,15 @@ async def run_agent_turn(
             )
         )
 
-        response = await client.responses.create(
-            model=settings.openai_model,
-            instructions=SYSTEM_PROMPT,
-            input=input_items,
-            tools=tools,
-            max_output_tokens=900,
-        )
+        try:
+            response = await _call_model(
+                client,
+                input_items=input_items,
+                tools=tools,
+                traces=traces,
+            )
+        except Exception as exc:
+            return _model_failure_response(session, traces, ui_actions, exc)
 
         usage_trace = _usage_trace(response)
         if usage_trace:
@@ -102,7 +213,7 @@ async def run_agent_turn(
             text = (response.output_text or "").strip()
             if not text:
                 text = "I couldn't complete that request safely. Please try again."
-            session.history.append({"role": "assistant", "content": text})
+            session.record_message("assistant", text)
             return ChatResponse(
                 session_id=session.id,
                 message=text,
@@ -141,6 +252,7 @@ async def run_agent_turn(
                     "message": "The Bookly service could not complete this request.",
                 }
 
+            session.record_tool_result(call.name, tool_output)
             input_items.append(
                 {
                     "type": "function_call_output",
@@ -149,6 +261,7 @@ async def run_agent_turn(
                 }
             )
 
+    _discard_unrendered_actions(session, ui_actions)
     fallback = "I couldn't complete that request safely after several steps. Please try again."
     traces.append(
         TraceEvent(
@@ -157,19 +270,18 @@ async def run_agent_turn(
             data={"max_iterations": settings.max_tool_iterations},
         )
     )
-    session.history.append({"role": "assistant", "content": fallback})
+    session.record_message("assistant", fallback)
     return ChatResponse(
         session_id=session.id,
         message=fallback,
         authenticated=session.authenticated,
         sources=list(sources_by_id.values()),
-        ui_actions=ui_actions,
         trace=traces,
     )
 
 
 async def handle_message(session: Session, message: str) -> ChatResponse:
-    session.history.append({"role": "user", "content": message})
+    session.record_message("user", message)
     return await run_agent_turn(session, current_user_message=message)
 
 

@@ -1,4 +1,8 @@
-SYSTEM_PROMPT = """You are Bookly's customer support agent.
+def build_system_prompt(today: str) -> str:
+    return f"""You are Bookly's customer support agent.
+
+The current Bookly demo date is {today}. Use this as today's date for all relative-date reasoning.
+Do not infer a different current date from model knowledge or runtime context.
 
 Your job is to resolve customer support requests accurately and with as little friction as possible.
 

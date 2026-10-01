@@ -18,8 +18,9 @@ TODAY = date.fromisoformat(os.getenv("BOOKLY_TODAY", "2026-10-01"))
 RETURN_WINDOW_DAYS = 30
 LOST_AFTER_BUSINESS_DAYS = 3
 CREATED_RETURNS: dict[str, dict] = {}
+ACTIVE_RETURNS_BY_ITEM: dict[tuple[str, str, str], dict] = {}
 
-app = FastAPI(title="Bookly Commerce API", version="0.2.0")
+app = FastAPI(title="Bookly Commerce API", version="0.3.0")
 
 
 class EligibilityRequest(BaseModel):
@@ -66,6 +67,10 @@ def item_for(order: dict, item_id: str) -> dict:
     if not item:
         raise HTTPException(404, "Item not found")
     return item
+
+
+def active_return_key(customer_id: str, order_id: str, item_id: str) -> tuple[str, str, str]:
+    return (customer_id, order_id, item_id)
 
 
 def add_business_days(start: date, days: int) -> date:
@@ -195,6 +200,20 @@ async def check_return(request: EligibilityRequest, authorization: str | None = 
     require_scope(claims, "returns:read")
     order = owned_order(request.order_id, claims["sub"])
     item = item_for(order, request.item_id)
+
+    existing = ACTIVE_RETURNS_BY_ITEM.get(
+        active_return_key(claims["sub"], request.order_id, request.item_id)
+    )
+    if existing:
+        return {
+            "order_id": request.order_id,
+            "item_id": request.item_id,
+            "item_title": item["title"],
+            "eligible": False,
+            "reason": "An active return already exists for this item",
+            "existing_return_id": existing["return_id"],
+        }
+
     return {
         "order_id": request.order_id,
         "item_id": request.item_id,
@@ -213,8 +232,21 @@ async def create_return(
     require_scope(claims, "returns:execute")
     if not idempotency_key:
         raise HTTPException(400, "Idempotency-Key is required")
+
     if idempotency_key in CREATED_RETURNS:
         return CREATED_RETURNS[idempotency_key]
+
+    key = active_return_key(claims["sub"], request.order_id, request.item_id)
+    existing = ACTIVE_RETURNS_BY_ITEM.get(key)
+    if existing:
+        raise HTTPException(
+            409,
+            detail={
+                "code": "ACTIVE_RETURN_EXISTS",
+                "return_id": existing["return_id"],
+                "message": f"An active return already exists for this item ({existing['return_id']}).",
+            },
+        )
 
     order = owned_order(request.order_id, claims["sub"])
     item = item_for(order, request.item_id)
@@ -236,4 +268,5 @@ async def create_return(
         "refund_timing": verdict["refund_timing"],
     }
     CREATED_RETURNS[idempotency_key] = result
+    ACTIVE_RETURNS_BY_ITEM[key] = result
     return result

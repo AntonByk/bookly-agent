@@ -9,7 +9,7 @@ The model can **interpret, retrieve, and propose**. It cannot authenticate custo
 Three mocked HTTP services represent meaningful trust/authority boundaries:
 
 - **Identity** — verifies the customer and issues customer-scoped tokens.
-- **Commerce** — owns orders, tracking, return eligibility, resolution policy, and transaction execution.
+- **Commerce** — owns orders, tracking, return eligibility, resolution policy, duplicate-action protection, and transaction execution.
 - **Knowledge** — exposes public Bookly help-centre content.
 
 The **Agent application** owns conversation state, the direct LLM tool loop, progressive tool exposure, action proposals, software confirmation, and the UI.
@@ -23,9 +23,13 @@ The live agent orchestration is wired directly to the OpenAI Responses API. The 
 - calls Knowledge and Commerce over real local HTTP boundaries;
 - keeps the customer token server-side and outside model context;
 - automatically resumes a pending customer request after OTP verification;
+- stores structured conversation history, including authoritative tool results and confirmed application actions;
+- injects the pinned demo date into model instructions for deterministic relative-date reasoning;
+- retries one transient model failure and then fails safely without executing an action;
 - allows the model to `propose_return` but gives it no `create_return` or `issue_refund` capability;
 - executes confirmed returns through a non-LLM application endpoint;
 - uses the pending action ID as the Commerce idempotency key;
+- separately prevents a second active return for the same customer/order/item even when a different idempotency key is used;
 - records an observable trace of model calls, tool calls, auth transitions, and actions;
 - validates knowledge article IDs before software renders source chips.
 
@@ -105,10 +109,10 @@ The prototype pins:
 BOOKLY_TODAY=2026-10-01
 ```
 
-so fixture behaviour, return windows, and evaluations remain reproducible.
+and injects that value into the model instructions, so fixture behaviour, policy maths, and natural-language date reasoning remain reproducible.
 
 ## Testing philosophy
 
-`tests/` covers things software should make certain: scopes, tool exposure, policy maths, ownership, and action boundaries.
+`tests/` covers things software should make certain: scopes, tool exposure, policy maths, ownership, idempotency, duplicate returns, history persistence, and action boundaries.
 
 `evals/` covers things that require model judgment: ambiguity, semantic intent mapping, groundedness, correct tool choice, and refusal to infer unsupported facts.

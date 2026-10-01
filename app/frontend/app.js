@@ -17,13 +17,28 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Bookly: localStorage unavailable; session will be in-memory only.", error);
   }
 
+  function appendSafeFormattedText(container, text) {
+    // Render only the tiny Markdown subset we intentionally support.
+    // Everything else remains text, so model output cannot inject HTML.
+    const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+    for (const part of parts) {
+      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+        const strong = document.createElement("strong");
+        strong.textContent = part.slice(2, -2);
+        container.appendChild(strong);
+      } else {
+        container.appendChild(document.createTextNode(part));
+      }
+    }
+  }
+
   function addMessage(role, text, sources = []) {
     const wrap = document.createElement("div");
     wrap.className = `message-wrap ${role}`;
 
     const el = document.createElement("div");
     el.className = `message ${role}`;
-    el.textContent = text;
+    appendSafeFormattedText(el, text);
     wrap.appendChild(el);
 
     if (role === "assistant" && sources.length) {

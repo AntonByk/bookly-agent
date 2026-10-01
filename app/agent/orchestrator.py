@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import Any
 
 from openai import (
@@ -17,6 +18,8 @@ from app.agent.prompts import build_system_prompt
 from app.agent.session import Session
 from app.agent.settings import settings
 from app.agent.tools import available_tools, execute_tool
+
+logger = logging.getLogger("bookly.agent")
 
 
 def _history_as_input(session: Session) -> list[dict[str, str]]:
@@ -63,6 +66,31 @@ def _usage_trace(response: Any) -> TraceEvent | None:
     )
 
 
+def _provider_error_details(exc: Exception) -> dict[str, Any]:
+    details: dict[str, Any] = {"error_type": type(exc).__name__}
+    status_code = getattr(exc, "status_code", None)
+    request_id = getattr(exc, "request_id", None)
+    body = getattr(exc, "body", None)
+
+    if status_code is not None:
+        details["status_code"] = status_code
+    if request_id:
+        details["request_id"] = request_id
+
+    if isinstance(body, dict):
+        provider_error = body.get("error", body)
+        if isinstance(provider_error, dict):
+            if provider_error.get("code"):
+                details["provider_code"] = provider_error["code"]
+            if provider_error.get("type"):
+                details["provider_type"] = provider_error["type"]
+            if provider_error.get("message"):
+                # Safe to expose provider diagnostics; API secrets are not included here.
+                details["provider_message"] = str(provider_error["message"])[:500]
+
+    return details
+
+
 async def _call_model(
     client: AsyncOpenAI,
     *,
@@ -86,7 +114,7 @@ async def _call_model(
                 TraceEvent(
                     type="model_retry",
                     message="Transient model call failure; retrying once.",
-                    data={"error_type": type(exc).__name__},
+                    data=_provider_error_details(exc),
                 )
             )
             await asyncio.sleep(0.4)
@@ -96,7 +124,7 @@ async def _call_model(
                     TraceEvent(
                         type="model_retry",
                         message="Model provider returned a server error; retrying once.",
-                        data={"status_code": exc.status_code},
+                        data=_provider_error_details(exc),
                     )
                 )
                 await asyncio.sleep(0.4)
@@ -119,12 +147,15 @@ def _model_failure_response(
     exc: Exception,
 ) -> ChatResponse:
     _discard_unrendered_actions(session, ui_actions)
+    details = _provider_error_details(exc)
+    logger.error("OpenAI model call failed safely: %s", details)
+
     message = "I'm having trouble reaching Bookly's AI service right now. No action was taken. Please try again."
     traces.append(
         TraceEvent(
             type="model_error",
             message="Model call failed safely; no consequential action was executed.",
-            data={"error_type": type(exc).__name__},
+            data=details,
         )
     )
     session.record_message("assistant", message)

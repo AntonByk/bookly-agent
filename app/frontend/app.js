@@ -42,6 +42,40 @@ document.addEventListener("DOMContentLoaded", () => {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  function showThinking(label = "Bookly is thinking") {
+    hideThinking();
+
+    const wrap = document.createElement("div");
+    wrap.id = "thinking-indicator";
+    wrap.className = "message-wrap assistant thinking-wrap";
+    wrap.setAttribute("role", "status");
+    wrap.setAttribute("aria-live", "polite");
+
+    const bubble = document.createElement("div");
+    bubble.className = "message assistant thinking";
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "thinking-label";
+    labelEl.textContent = label;
+    bubble.appendChild(labelEl);
+
+    const dots = document.createElement("span");
+    dots.className = "thinking-dots";
+    dots.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 3; i += 1) {
+      dots.appendChild(document.createElement("span"));
+    }
+    bubble.appendChild(dots);
+
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function hideThinking() {
+    document.getElementById("thinking-indicator")?.remove();
+  }
+
   function addTrace(events = []) {
     for (const event of events) {
       const el = document.createElement("div");
@@ -106,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function confirmAction(action) {
     const actionId = action.payload.action_id;
+    showThinking("Processing your return");
     try {
       const data = await apiFetch(
         `/api/actions/${encodeURIComponent(actionId)}/confirm`,
@@ -120,6 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
       addTrace(data.trace || []);
     } catch (error) {
       showRequestFailure("action confirmation", error);
+    } finally {
+      hideThinking();
     }
   }
 
@@ -187,6 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function sendMessage(text) {
     addMessage("user", text);
     sendButton.disabled = true;
+    chatInput.disabled = true;
+    showThinking();
 
     try {
       const data = await apiFetch("/api/chat", {
@@ -199,7 +238,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       showRequestFailure("chat", error);
     } finally {
+      hideThinking();
       sendButton.disabled = false;
+      chatInput.disabled = false;
       chatInput.focus();
     }
   }
@@ -231,6 +272,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("verify-code").onclick = async () => {
     const code = document.getElementById("auth-code").value;
+    const verifyButton = document.getElementById("verify-code");
+    const originalLabel = verifyButton.textContent;
+    verifyButton.disabled = true;
+    verifyButton.textContent = "Verifying…";
     try {
       const data = await apiFetch("/api/auth/verify", {
         method: "POST",
@@ -259,6 +304,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       document.getElementById("auth-message").textContent = String(error);
+    } finally {
+      verifyButton.disabled = false;
+      verifyButton.textContent = originalLabel;
     }
   };
 

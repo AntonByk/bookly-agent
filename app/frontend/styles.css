@@ -32,3 +32,18 @@ dialog { border: 0; border-radius: 16px; padding: 24px; min-width: 360px; box-sh
 dialog form { display: grid; gap: 10px; }
 dialog input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
 @media (max-width: 850px) { .shell { grid-template-columns: 1fr; } .trace-card { max-height: none; } }
+
+button:disabled, input:disabled { opacity: .58; cursor: not-allowed; }
+.thinking { display: flex; align-items: center; gap: 9px; color: #656b66; }
+.thinking-label { font-size: 13px; }
+.thinking-dots { display: inline-flex; align-items: center; gap: 4px; }
+.thinking-dots span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: bookly-dot 1.15s infinite ease-in-out; }
+.thinking-dots span:nth-child(2) { animation-delay: .14s; }
+.thinking-dots span:nth-child(3) { animation-delay: .28s; }
+@keyframes bookly-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dots span { animation: none; opacity: .7; }
+}

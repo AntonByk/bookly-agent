@@ -1,0 +1,39 @@
+{
+  "orders": [
+    {
+      "order_id": "ORD-1001",
+      "customer_id": "CUST-001",
+      "status": "in_transit",
+      "placed_at": "2026-09-22",
+      "shipped_at": "2026-09-30",
+      "expected_delivery": "2026-10-03",
+      "items": [{"item_id": "ITEM-DUNE", "title": "Dune", "price_gbp": 12.99}],
+      "tracking_events": [
+        {"timestamp": "2026-09-30T18:42:00", "status": "collected", "location": "London Distribution Centre"},
+        {"timestamp": "2026-10-01T06:15:00", "status": "sorting", "location": "Regional Sorting Centre"}
+      ]
+    },
+    {
+      "order_id": "ORD-1002",
+      "customer_id": "CUST-001",
+      "status": "delivered",
+      "placed_at": "2026-09-20",
+      "delivered_at": "2026-09-28",
+      "items": [
+        {"item_id": "ITEM-OTTOLENGHI", "title": "Ottolenghi Simple", "price_gbp": 24.99},
+        {"item_id": "ITEM-WOK", "title": "The Wok", "price_gbp": 21.99}
+      ],
+      "tracking_events": [{"timestamp": "2026-09-28T14:10:00", "status": "delivered", "location": "Customer address"}]
+    },
+    {
+      "order_id": "ORD-1003",
+      "customer_id": "CUST-001",
+      "status": "delayed_in_transit",
+      "placed_at": "2026-09-19",
+      "shipped_at": "2026-09-27",
+      "expected_delivery": "2026-09-30",
+      "items": [{"item_id": "ITEM-CREATIVE-ACT", "title": "The Creative Act", "price_gbp": 18.99}],
+      "tracking_events": [{"timestamp": "2026-10-01T07:35:00", "status": "delayed", "location": "Carrier network"}]
+    }
+  ]
+}

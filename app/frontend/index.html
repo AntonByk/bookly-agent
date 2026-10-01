@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bookly Support</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="chat-card">
+      <header>
+        <div>
+          <div class="brand">Bookly</div>
+          <div class="subtitle">Customer support</div>
+        </div>
+        <div id="services" class="services">Checking services…</div>
+      </header>
+
+      <div id="messages" class="messages">
+        <div class="message assistant">Hi — how can I help with your Bookly order today?</div>
+      </div>
+
+      <div id="actions" class="actions"></div>
+
+      <form id="chat-form" class="composer">
+        <input id="chat-input" autocomplete="off" placeholder="Ask Bookly…" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <aside class="trace-card">
+      <h2>Agent trace</h2>
+      <p>Application events appear here. This will expose tool calls and control boundaries without revealing model chain-of-thought.</p>
+      <div id="trace"></div>
+    </aside>
+  </main>
+
+  <dialog id="auth-dialog">
+    <form method="dialog" id="auth-form">
+      <h3>Verify your email</h3>
+      <label>Email used for your order</label>
+      <input id="auth-email" type="email" required />
+      <button id="send-code" type="button">Send code</button>
+      <div id="code-area" hidden>
+        <p id="auth-message"></p>
+        <label>Verification code</label>
+        <input id="auth-code" inputmode="numeric" placeholder="Demo: 123456" />
+        <button id="verify-code" type="button">Verify</button>
+      </div>
+      <button type="button" onclick="document.getElementById('auth-dialog').close()">Cancel</button>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

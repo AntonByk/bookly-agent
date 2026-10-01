@@ -1,0 +1,9 @@
+{
+  "articles": [
+    {"article_id": "shipping-delivery", "title": "Shipping & Delivery", "content": "Standard delivery usually takes 3–5 business days. Express delivery usually takes 1–2 business days."},
+    {"article_id": "international-shipping", "title": "International Shipping", "content": "Bookly ships to Finland. International delivery to Finland typically takes 5–8 business days."},
+    {"article_id": "returns", "title": "Returns & Refunds", "content": "Changed-mind returns are accepted within 30 days of delivery when eligible. Refunds for changed-mind returns are issued to the original payment method after Bookly receives the item."},
+    {"article_id": "gift-cards", "title": "Gift Cards", "content": "Bookly gift cards can be purchased online, redeemed at checkout, and checked for remaining balance."},
+    {"article_id": "contact-us", "title": "Contact Us", "content": "For questions not covered by the Help Centre, use the Contact Us form at /contact to reach the customer care team."}
+  ]
+}

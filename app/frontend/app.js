@@ -18,17 +18,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function appendSafeFormattedText(container, text) {
-    // Render only the tiny Markdown subset we intentionally support.
-    // Everything else remains text, so model output cannot inject HTML.
-    const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+    // Render only the tiny Markdown subset we intentionally support:
+    // **bold** and *italics*. Everything else remains text, so model output
+    // cannot inject HTML.
+    const parts = String(text).split(/(\*\*[^*]+\*\*|\*[^*\n]+\*)/g);
+
     for (const part of parts) {
+      if (!part) continue;
+
       if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
         const strong = document.createElement("strong");
         strong.textContent = part.slice(2, -2);
         container.appendChild(strong);
-      } else {
-        container.appendChild(document.createTextNode(part));
+        continue;
       }
+
+      if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+        const emphasis = document.createElement("em");
+        emphasis.textContent = part.slice(1, -1);
+        container.appendChild(emphasis);
+        continue;
+      }
+
+      container.appendChild(document.createTextNode(part));
     }
   }
 

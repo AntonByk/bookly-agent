@@ -16,9 +16,10 @@ DATA = json.loads((ROOT / "data" / "commerce.json").read_text())
 SECRET = os.getenv("BOOKLY_MOCK_TOKEN_SECRET", "bookly-local-demo-secret").encode()
 TODAY = date.fromisoformat(os.getenv("BOOKLY_TODAY", "2026-10-01"))
 RETURN_WINDOW_DAYS = 30
+LOST_AFTER_BUSINESS_DAYS = 3
 CREATED_RETURNS: dict[str, dict] = {}
 
-app = FastAPI(title="Bookly Commerce API", version="0.1.0")
+app = FastAPI(title="Bookly Commerce API", version="0.2.0")
 
 
 class EligibilityRequest(BaseModel):
@@ -67,6 +68,28 @@ def item_for(order: dict, item_id: str) -> dict:
     return item
 
 
+def add_business_days(start: date, days: int) -> date:
+    current = start
+    added = 0
+    while added < days:
+        current += timedelta(days=1)
+        if current.weekday() < 5:
+            added += 1
+    return current
+
+
+def order_summary(order: dict) -> dict:
+    return {
+        "order_id": order["order_id"],
+        "status": order["status"],
+        "placed_at": order["placed_at"],
+        "shipped_at": order.get("shipped_at"),
+        "expected_delivery": order.get("expected_delivery"),
+        "delivered_at": order.get("delivered_at"),
+        "items": order["items"],
+    }
+
+
 def eligibility(order: dict, item: dict, reason_category: str) -> dict:
     delivered = order.get("delivered_at")
     if not delivered:
@@ -74,11 +97,31 @@ def eligibility(order: dict, item: dict, reason_category: str) -> dict:
     delivered_date = date.fromisoformat(delivered)
     eligible_until = delivered_date + timedelta(days=RETURN_WINDOW_DAYS)
     if TODAY > eligible_until:
-        return {"eligible": False, "reason": "Return window expired", "eligible_until": eligible_until.isoformat()}
+        return {
+            "eligible": False,
+            "reason": "Return window expired",
+            "eligible_until": eligible_until.isoformat(),
+        }
     if reason_category == "changed_mind":
-        return {"eligible": True, "reason_category": reason_category, "eligible_until": eligible_until.isoformat(), "refund_amount": item["price_gbp"], "refund_method": "original_payment_method", "refund_timing": "after_item_received", "return_shipping": "prepaid_label"}
+        return {
+            "eligible": True,
+            "reason_category": reason_category,
+            "eligible_until": eligible_until.isoformat(),
+            "refund_amount": item["price_gbp"],
+            "refund_method": "original_payment_method",
+            "refund_timing": "after_item_received",
+            "return_shipping": "prepaid_label",
+        }
     if reason_category == "damaged":
-        return {"eligible": True, "reason_category": reason_category, "eligible_until": eligible_until.isoformat(), "refund_amount": item["price_gbp"], "refund_method": "original_payment_method", "refund_timing": "immediate_after_approval", "return_shipping": "not_required"}
+        return {
+            "eligible": True,
+            "reason_category": reason_category,
+            "eligible_until": eligible_until.isoformat(),
+            "refund_amount": item["price_gbp"],
+            "refund_method": "original_payment_method",
+            "refund_timing": "immediate_after_approval",
+            "return_shipping": "not_required",
+        }
     return {"eligible": False, "reason": "Unsupported return reason"}
 
 
@@ -91,14 +134,20 @@ async def health() -> dict:
 async def list_orders(authorization: str | None = Header(default=None)) -> dict:
     claims = decode_token(authorization)
     require_scope(claims, "orders:read")
-    return {"orders": [o for o in DATA["orders"] if o["customer_id"] == claims["sub"]]}
+    return {
+        "orders": [
+            order_summary(order)
+            for order in DATA["orders"]
+            if order["customer_id"] == claims["sub"]
+        ]
+    }
 
 
 @app.get("/v1/orders/{order_id}")
 async def get_order(order_id: str, authorization: str | None = Header(default=None)) -> dict:
     claims = decode_token(authorization)
     require_scope(claims, "orders:read")
-    return owned_order(order_id, claims["sub"])
+    return order_summary(owned_order(order_id, claims["sub"]))
 
 
 @app.get("/v1/orders/{order_id}/tracking")
@@ -109,28 +158,82 @@ async def get_tracking(order_id: str, authorization: str | None = Header(default
     return {"order_id": order_id, "tracking_events": order.get("tracking_events", [])}
 
 
+@app.get("/v1/orders/{order_id}/resolution-options")
+async def resolution_options(order_id: str, authorization: str | None = Header(default=None)) -> dict:
+    claims = decode_token(authorization)
+    require_scope(claims, "orders:read")
+    order = owned_order(order_id, claims["sub"])
+    promised = order.get("expected_delivery")
+    if not promised:
+        return {
+            "order_id": order_id,
+            "refund_permitted": False,
+            "replacement_permitted": False,
+            "reason": "No delivery promise is available",
+        }
+    threshold = add_business_days(date.fromisoformat(promised), LOST_AFTER_BUSINESS_DAYS)
+    threshold_reached = TODAY >= threshold
+    return {
+        "order_id": order_id,
+        "status": order["status"],
+        "promised_delivery": promised,
+        "lost_order_threshold": threshold.isoformat(),
+        "lost_order_threshold_reached": threshold_reached,
+        "refund_permitted": threshold_reached,
+        "replacement_permitted": threshold_reached,
+        "reason": (
+            "Order has reached the lost-order threshold"
+            if threshold_reached
+            else f"Order is not considered lost until {threshold.isoformat()}"
+        ),
+    }
+
+
 @app.post("/v1/returns/check")
 async def check_return(request: EligibilityRequest, authorization: str | None = Header(default=None)) -> dict:
     claims = decode_token(authorization)
     require_scope(claims, "returns:read")
     order = owned_order(request.order_id, claims["sub"])
     item = item_for(order, request.item_id)
-    return {"order_id": request.order_id, "item_id": request.item_id, "item_title": item["title"], **eligibility(order, item, request.reason_category)}
+    return {
+        "order_id": request.order_id,
+        "item_id": request.item_id,
+        "item_title": item["title"],
+        **eligibility(order, item, request.reason_category),
+    }
 
 
 @app.post("/v1/returns")
-async def create_return(request: CreateReturnRequest, authorization: str | None = Header(default=None), idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")) -> dict:
+async def create_return(
+    request: CreateReturnRequest,
+    authorization: str | None = Header(default=None),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+) -> dict:
     claims = decode_token(authorization)
-    require_scope(claims, "returns:propose")
+    require_scope(claims, "returns:execute")
     if not idempotency_key:
         raise HTTPException(400, "Idempotency-Key is required")
     if idempotency_key in CREATED_RETURNS:
         return CREATED_RETURNS[idempotency_key]
+
     order = owned_order(request.order_id, claims["sub"])
     item = item_for(order, request.item_id)
     verdict = eligibility(order, item, request.reason_category)
     if not verdict.get("eligible"):
         raise HTTPException(409, verdict.get("reason", "Return not eligible"))
-    result = {"return_id": f"RET-{1000 + len(CREATED_RETURNS) + 1}", "status": "awaiting_drop_off" if verdict["return_shipping"] == "prepaid_label" else "approved", "order_id": request.order_id, "item_id": request.item_id, "refund_amount": verdict["refund_amount"], "refund_status": "pending_item_receipt" if verdict["refund_timing"] == "after_item_received" else "approved", "refund_timing": verdict["refund_timing"]}
+
+    result = {
+        "return_id": f"RET-{1000 + len(CREATED_RETURNS) + 1}",
+        "status": "awaiting_drop_off" if verdict["return_shipping"] == "prepaid_label" else "approved",
+        "order_id": request.order_id,
+        "item_id": request.item_id,
+        "refund_amount": verdict["refund_amount"],
+        "refund_status": (
+            "pending_item_receipt"
+            if verdict["refund_timing"] == "after_item_received"
+            else "approved"
+        ),
+        "refund_timing": verdict["refund_timing"],
+    }
     CREATED_RETURNS[idempotency_key] = result
     return result

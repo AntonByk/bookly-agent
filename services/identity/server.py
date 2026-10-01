@@ -10,7 +10,7 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Bookly Identity API", version="0.1.0")
+app = FastAPI(title="Bookly Identity API", version="0.2.0")
 SECRET = os.getenv("BOOKLY_MOCK_TOKEN_SECRET", "bookly-local-demo-secret").encode()
 CUSTOMERS = {"alex@example.com": "CUST-001"}
 CHALLENGES: dict[str, str | None] = {}
@@ -41,7 +41,11 @@ async def health() -> dict:
 async def start_verification(request: StartVerification) -> dict:
     challenge_id = str(uuid4())
     CHALLENGES[challenge_id] = CUSTOMERS.get(request.email.lower())
-    return {"challenge_id": challenge_id, "message": "If that email has orders with us, we've sent a verification code.", "demo_code": "123456"}
+    return {
+        "challenge_id": challenge_id,
+        "message": "If that email has orders with us, we've sent a verification code.",
+        "demo_code": "123456",
+    }
 
 
 @app.post("/v1/verification/verify")
@@ -51,5 +55,10 @@ async def verify_code(request: VerifyCode) -> dict:
     customer_id = CHALLENGES.pop(request.challenge_id)
     if customer_id is None:
         raise HTTPException(401, "Invalid or expired verification code")
-    scopes = ["orders:read", "returns:read", "returns:propose"]
-    return {"verified": True, "customer_id": customer_id, "scopes": scopes, "access_token": issue_token(customer_id, scopes)}
+    scopes = ["orders:read", "returns:read", "returns:execute"]
+    return {
+        "verified": True,
+        "customer_id": customer_id,
+        "scopes": scopes,
+        "access_token": issue_token(customer_id, scopes),
+    }

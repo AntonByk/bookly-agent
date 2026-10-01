@@ -7,16 +7,27 @@ header { padding: 20px 24px; border-bottom: 1px solid #eee9e0; display: flex; ju
 .brand { font-family: Georgia, serif; font-size: 28px; font-weight: 700; }
 .subtitle, .services, .trace-card p { color: #6f746f; font-size: 13px; }
 .messages { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-.message { max-width: 78%; padding: 12px 14px; border-radius: 16px; line-height: 1.45; white-space: pre-wrap; }
-.message.assistant { align-self: flex-start; background: #f0eee8; }
-.message.user { align-self: flex-end; background: #18201d; color: white; }
-.actions { padding: 0 24px 12px; }
+.message-wrap { max-width: 82%; }
+.message-wrap.assistant { align-self: flex-start; }
+.message-wrap.user { align-self: flex-end; }
+.message { padding: 12px 14px; border-radius: 16px; line-height: 1.45; white-space: pre-wrap; }
+.message.assistant { background: #f0eee8; }
+.message.user { background: #18201d; color: white; }
+.sources { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.source { font-size: 11px; color: #616861; background: #f7f5f0; border: 1px solid #e5e0d7; padding: 5px 8px; border-radius: 999px; }
+.actions { padding: 0 24px 12px; display: flex; flex-wrap: wrap; gap: 8px; }
 button { border: 0; border-radius: 10px; padding: 10px 14px; background: #18201d; color: white; cursor: pointer; }
+button.secondary { background: #ece9e2; color: #18201d; }
+.action-card { width: 100%; border: 1px solid #d8d2c7; border-radius: 14px; padding: 14px; background: #faf8f4; }
+.action-card dl { margin: 8px 0 12px; display: grid; grid-template-columns: 140px 1fr; row-gap: 5px; font-size: 13px; }
+.action-card dt { color: #777; }
+.action-card dd { margin: 0; }
 .composer { border-top: 1px solid #eee9e0; padding: 16px; display: flex; gap: 8px; }
 .composer input { flex: 1; border: 1px solid #d9d5cd; border-radius: 12px; padding: 12px; font-size: 15px; }
 .trace-card { padding: 22px; max-height: 720px; overflow-y: auto; }
 .trace-card h2 { margin-top: 0; }
 .trace-event { border-top: 1px solid #eee9e0; padding: 12px 0; font-size: 13px; line-height: 1.4; }
+.trace-data { margin-top: 5px; color: #777; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
 dialog { border: 0; border-radius: 16px; padding: 24px; min-width: 360px; box-shadow: 0 20px 80px rgba(0,0,0,.25); }
 dialog form { display: grid; gap: 10px; }
 dialog input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }

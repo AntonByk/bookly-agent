@@ -9,30 +9,57 @@ The model can **interpret, retrieve, and propose**. It cannot authenticate custo
 Three mocked HTTP services represent meaningful trust/authority boundaries:
 
 - **Identity** — verifies the customer and issues customer-scoped tokens.
-- **Commerce** — owns orders, tracking, return eligibility, and transaction execution.
+- **Commerce** — owns orders, tracking, return eligibility, resolution policy, and transaction execution.
 - **Knowledge** — exposes public Bookly help-centre content.
 
-The **Agent application** manages conversation state, progressive tool exposure, action proposals, confirmation, and the UI.
+The **Agent application** owns conversation state, the direct LLM tool loop, progressive tool exposure, action proposals, software confirmation, and the UI.
 
 ## Current milestone
 
-This skeleton boots all four local HTTP processes, exposes typed FastAPI/OpenAPI contracts, serves the chat UI, implements mock Identity/Commerce/Knowledge APIs, and provides the application/session boundary that the LLM orchestration will plug into next.
+The live agent orchestration is wired directly to the OpenAI Responses API. The application:
+
+- owns the model/tool loop rather than using an agent framework;
+- exposes tools progressively based on verified session state;
+- calls Knowledge and Commerce over real local HTTP boundaries;
+- keeps the customer token server-side and outside model context;
+- automatically resumes a pending customer request after OTP verification;
+- allows the model to `propose_return` but gives it no `create_return` or `issue_refund` capability;
+- executes confirmed returns through a non-LLM application endpoint;
+- uses the pending action ID as the Commerce idempotency key;
+- records an observable trace of model calls, tool calls, auth transitions, and actions;
+- validates knowledge article IDs before software renders source chips.
 
 ## Quick start
 
-Requirements: Python 3.11+.
+Requirements: Python 3.11+ and an OpenAI API key.
 
 ```bash
+git clone https://github.com/AntonByk/bookly-agent.git
+cd bookly-agent
+
 python -m venv .venv
-source .venv/bin/activate     # Windows: .venv\\Scripts\\activate
+source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
+# Add OPENAI_API_KEY to .env
+
 python run.py
 ```
 
 Then open http://127.0.0.1:8000.
 
 Docker will be optional in the final submission; it is intentionally not required for local review.
+
+## Demo identity
+
+Use:
+
+```text
+Email: alex@example.com
+OTP:   123456
+```
+
+The identity API intentionally returns the same "if that email has orders..." response when starting verification, so the verification UI cannot be used to enumerate customers.
 
 ## API docs
 
@@ -45,6 +72,43 @@ When running:
 
 Each service also exposes `/openapi.json`.
 
+## Progressive capability disclosure
+
+Anonymous sessions receive only:
+
+- `search_knowledge`
+- `cite_knowledge_sources`
+- `request_authentication`
+
+After verification, the model additionally receives:
+
+- `list_orders`
+- `get_order`
+- `get_tracking`
+- `get_resolution_options`
+- `check_return_eligibility`
+- `propose_return`
+
+The model never receives:
+
+- OTP verification
+- `create_return`
+- `issue_refund`
+
+The model proposes; software obtains consent and executes.
+
 ## Demo clock
 
-The prototype pins `BOOKLY_TODAY=2026-10-01` so fixture behaviour and evaluations remain reproducible.
+The prototype pins:
+
+```text
+BOOKLY_TODAY=2026-10-01
+```
+
+so fixture behaviour, return windows, and evaluations remain reproducible.
+
+## Testing philosophy
+
+`tests/` covers things software should make certain: scopes, tool exposure, policy maths, ownership, and action boundaries.
+
+`evals/` covers things that require model judgment: ambiguity, semantic intent mapping, groundedness, correct tool choice, and refusal to infer unsupported facts.

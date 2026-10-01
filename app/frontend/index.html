@@ -31,7 +31,10 @@
 
     <aside class="trace-card">
       <h2>Agent trace</h2>
-      <p>Application events appear here. This will expose tool calls and control boundaries without revealing model chain-of-thought.</p>
+      <p>
+        Observable application events: model calls, tool use, auth boundaries, and actions.
+        Private model reasoning is intentionally not exposed.
+      </p>
       <div id="trace"></div>
     </aside>
   </main>
@@ -48,7 +51,7 @@
         <input id="auth-code" inputmode="numeric" placeholder="Demo: 123456" />
         <button id="verify-code" type="button">Verify</button>
       </div>
-      <button type="button" onclick="document.getElementById('auth-dialog').close()">Cancel</button>
+      <button class="secondary" type="button" onclick="document.getElementById('auth-dialog').close()">Cancel</button>
     </form>
   </dialog>
 

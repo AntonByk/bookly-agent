@@ -1,26 +1,27 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent.models import ActionConfirmRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse
-from app.agent.orchestrator import handle_message
+from app.agent.orchestrator import handle_message, resume_pending_request
 from app.agent.session import sessions
 from app.agent.settings import settings
 
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = ROOT / "app" / "frontend"
 
-app = FastAPI(title="Bookly Agent", version="0.1.0")
+app = FastAPI(title="Bookly Agent", version="0.2.0")
 app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
 
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "agent"}
+    return {"status": "ok", "service": "agent", "model_configured": bool(settings.openai_api_key)}
 
 
 @app.get("/api/services")
@@ -38,6 +39,7 @@ async def service_status() -> dict:
                 results[name] = response.status_code == 200
             except httpx.HTTPError:
                 results[name] = False
+    results["model"] = bool(settings.openai_api_key)
     return results
 
 
@@ -62,6 +64,7 @@ async def auth_start(request: AuthStartRequest) -> dict:
         "session_id": session.id,
         "challenge_id": result["challenge_id"],
         "message": result["message"],
+        "demo_code": result.get("demo_code"),
     }
 
 
@@ -78,21 +81,27 @@ async def auth_verify(request: AuthVerifyRequest) -> dict:
             json={"challenge_id": request.challenge_id, "code": request.code},
         )
     if response.status_code >= 400:
-        raise HTTPException(response.status_code, response.json().get("detail", "Verification failed"))
+        detail = response.json().get("detail", "Verification failed")
+        raise HTTPException(response.status_code, detail)
 
     result = response.json()
     session.access_token = result["access_token"]
     session.customer_id = result["customer_id"]
     session.scopes = set(result["scopes"])
+
     pending = session.pending_intent
     session.pending_intent = None
+
+    resumed: ChatResponse | None = None
+    if pending:
+        resumed = await resume_pending_request(session, pending)
 
     return {
         "verified": True,
         "session_id": session.id,
         "customer_verified": True,
-        "pending_intent": pending,
         "scopes": sorted(session.scopes),
+        "resumed_response": resumed.model_dump() if resumed else None,
     }
 
 
@@ -102,9 +111,62 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
         session = sessions.get(request.session_id)
     except KeyError:
         raise HTTPException(404, "Unknown session")
-    if action_id not in session.pending_action_ids:
+
+    action = session.pending_actions.get(action_id)
+    if action is None:
         raise HTTPException(404, "Unknown or expired pending action")
-    raise HTTPException(501, "Action execution will be implemented with the agent tool loop milestone")
+    if not session.access_token:
+        raise HTTPException(401, "Customer is not verified")
+
+    async with httpx.AsyncClient(timeout=4.0) as client:
+        response = await client.post(
+            f"{settings.commerce_base_url}/v1/returns",
+            headers={
+                "Authorization": f"Bearer {session.access_token}",
+                "Idempotency-Key": action.id,
+            },
+            json={
+                "order_id": action.order_id,
+                "item_id": action.item_id,
+                "reason_category": action.reason_category,
+            },
+        )
+
+    if response.status_code >= 400:
+        try:
+            detail = response.json().get("detail", response.text)
+        except Exception:
+            detail = response.text
+        raise HTTPException(response.status_code, detail)
+
+    result = response.json()
+    session.pending_actions.pop(action_id, None)
+
+    return {
+        "executed": True,
+        "action_id": action_id,
+        "result": result,
+        "message": (
+            f"Done. Your return is {result['return_id']}. "
+            + (
+                f"Your £{result['refund_amount']:.2f} refund will be issued after Bookly receives the item."
+                if result["refund_timing"] == "after_item_received"
+                else f"Your £{result['refund_amount']:.2f} refund has been approved."
+            )
+        ),
+        "trace": [
+            {
+                "type": "action_confirmed",
+                "message": "Customer confirmed the software-rendered action card.",
+                "data": {"action_id": action_id},
+            },
+            {
+                "type": "action_executed",
+                "message": "Commerce re-validated and executed the return using the pending action ID as the idempotency key.",
+                "data": {"return_id": result["return_id"]},
+            },
+        ],
+    }
 
 
 @app.get("/")

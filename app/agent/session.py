@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from threading import Lock
+from typing import Any
 from uuid import uuid4
 
 
@@ -12,8 +13,9 @@ class Session:
     customer_id: str | None = None
     scopes: set[str] = field(default_factory=set)
     pending_intent: str | None = None
-    pending_action_ids: set[str] = field(default_factory=set)
+    pending_actions: dict[str, Any] = field(default_factory=dict)
     history: list[dict[str, str]] = field(default_factory=list)
+    retrieved_sources: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @property
     def authenticated(self) -> bool:

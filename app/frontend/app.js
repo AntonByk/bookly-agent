@@ -233,7 +233,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const detail = typeof data.detail === "string"
         ? data.detail
         : JSON.stringify(data.detail || data);
-      throw new Error(`${response.status} ${detail}`);
+      const error = new Error(detail);
+      error.status = response.status;
+      error.detail = detail;
+      throw error;
     }
     return data;
   }
@@ -395,9 +398,42 @@ document.addEventListener("DOMContentLoaded", () => {
       addTrace(data.trace || []);
     } catch (error) {
       buttons.forEach(button => { button.disabled = false; });
-      showRequestFailure("action confirmation", error);
+      console.error("Bookly action confirmation failed", error);
+      const message = error.detail ||
+        "I couldn't confirm whether the return completed. It is safe to try Confirm again.";
+      addMessage("assistant", message);
+      addTrace([
+        {
+          type: "ui_error",
+          message: "Return confirmation request did not produce a confirmed result.",
+          data: {status: error.status || null, error: String(error)}
+        }
+      ]);
     } finally {
       hideThinking();
+    }
+  }
+
+  async function cancelAction(action, card) {
+    const actionId = action.payload.action_id;
+    const buttons = card.querySelectorAll("button");
+    buttons.forEach(button => { button.disabled = true; });
+
+    try {
+      const data = await apiFetch(
+        `/api/actions/${encodeURIComponent(actionId)}/cancel`,
+        {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({session_id: sessionId})
+        }
+      );
+      actions.innerHTML = "";
+      addMessage("assistant", data.message);
+      addTrace(data.trace || []);
+    } catch (error) {
+      buttons.forEach(button => { button.disabled = false; });
+      showRequestFailure("action cancellation", error);
     }
   }
 
@@ -491,10 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cancel.className = "button button-ghost";
     cancel.type = "button";
     cancel.textContent = "Cancel";
-    cancel.addEventListener("click", () => {
-      actions.innerHTML = "";
-      addMessage("assistant", "No problem. I haven't created the return.");
-    });
+    cancel.addEventListener("click", () => cancelAction(action, card));
 
     footer.append(confirm, cancel);
     card.appendChild(footer);

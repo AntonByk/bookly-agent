@@ -27,12 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     debugPanel.hidden = false;
   }
 
-  try {
-    sessionId = localStorage.getItem("bookly_session_id");
-  } catch (error) {
-    console.warn("Bookly: localStorage unavailable; session will be in-memory only.", error);
-  }
-
   function appendSafeFormattedText(container, text) {
     const parts = String(text).split(/(\*\*[^*]+\*\*|\*[^*\n]+\*)/g);
 
@@ -211,11 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function rememberSession(id) {
     sessionId = id;
-    try {
-      localStorage.setItem("bookly_session_id", id);
-    } catch (error) {
-      console.warn("Bookly: could not persist session ID.", error);
-    }
   }
 
   function showRequestFailure(context, error) {
@@ -538,12 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
     challengeId = null;
     conversationLocked = false;
     sessionStateLabel.textContent = "AI Concierge";
-
-    try {
-      localStorage.removeItem("bookly_session_id");
-    } catch (error) {
-      console.warn("Bookly: could not clear persisted session ID.", error);
-    }
 
     hideThinking();
     actions.innerHTML = "";

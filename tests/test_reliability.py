@@ -2,7 +2,7 @@ import httpx
 
 from fastapi.testclient import TestClient
 
-from app.agent.orchestrator import _handoff_response, _history_as_input, _merge_ui_actions, _sanitize_customer_text
+from app.agent.orchestrator import _handoff_response, _history_as_input, _is_order_overview_request, _merge_ui_actions, _sanitize_customer_text
 from app.agent.prompts import build_system_prompt
 from app.agent.actions import PendingAction
 from app.agent.models import TraceEvent, UiAction
@@ -291,13 +291,24 @@ def test_order_table_persists_for_order_overview_but_is_suppressed_by_specific_r
         payload={"orders": [{"order_id": "ORD-1001"}]},
     )
 
+    assert _is_order_overview_request("Where are my orders?") is True
+    assert _is_order_overview_request("Show me my recent orders") is True
+    assert _is_order_overview_request("Has Dune actually been collected?") is False
+
     overview_actions = _merge_ui_actions([], [table], tool_name="list_orders")
-    assert [action.type for action in overview_actions] == ["orders_table"]
+    enriched_overview_actions = _merge_ui_actions(
+        overview_actions,
+        [],
+        tool_name="get_tracking",
+        preserve_order_table=True,
+    )
+    assert [action.type for action in enriched_overview_actions] == ["orders_table"]
 
     tracking_actions = _merge_ui_actions(
         overview_actions,
         [],
         tool_name="get_tracking",
+        preserve_order_table=False,
     )
     assert tracking_actions == []
 
@@ -311,6 +322,7 @@ def test_order_table_persists_for_order_overview_but_is_suppressed_by_specific_r
             )
         ],
         tool_name="propose_return",
+        preserve_order_table=False,
     )
     assert [action.type for action in return_actions] == ["confirm_action"]
 

@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const authMessage = document.getElementById("auth-message");
   const authEmailError = document.getElementById("auth-email-error");
   const authCodeError = document.getElementById("auth-code-error");
+  const sessionStateLabel = document.getElementById("session-state-label");
 
   const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
   if (debugEnabled) {
@@ -371,6 +372,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function humanize(value) {
+    const labels = {
+      original_payment_method: "Original payment method",
+      after_item_received: "After Bookly receives the item",
+      immediate_after_approval: "Immediately after approval",
+      prepaid_label: "Prepaid return label",
+      not_required: "No return required"
+    };
+
+    if (labels[value]) return labels[value];
+
     const text = String(value || "").replaceAll("_", " ");
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
@@ -526,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionId = null;
     challengeId = null;
     conversationLocked = false;
+    sessionStateLabel.textContent = "AI Concierge";
 
     try {
       localStorage.removeItem("bookly_session_id");
@@ -552,7 +564,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderActions(uiActions = []) {
-    actions.innerHTML = "";
+    const replacesPendingAction = uiActions.some(
+      action => action.type === "confirm_action" || action.type === "human_handoff"
+    );
+    if (replacesPendingAction) {
+      actions.innerHTML = "";
+    }
 
     for (const action of uiActions) {
       if (action.type === "human_handoff") {
@@ -710,6 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       closeAuthDialog();
+      sessionStateLabel.textContent = "Verified";
       addTrace([
         {
           type: "verification_completed",
@@ -719,6 +737,8 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
 
       if (data.pending_request) {
+        chatInput.disabled = true;
+        sendButton.disabled = true;
         showThinking("Verified. Picking up where we left off");
 
         try {
@@ -745,6 +765,11 @@ document.addEventListener("DOMContentLoaded", () => {
           showRequestFailure("request resume", error);
         } finally {
           hideThinking();
+          if (!conversationLocked) {
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+          }
         }
       }
     } catch (error) {

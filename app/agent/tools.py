@@ -209,6 +209,22 @@ async def _request(
     return response.json()
 
 
+def _should_render_orders_table(message: str | None) -> bool:
+    if not message:
+        return False
+    normalized = message.lower()
+    broad_phrases = (
+        "my orders",
+        "recent orders",
+        "show me my orders",
+        "show my orders",
+        "list my orders",
+        "where are my orders",
+        "what orders",
+    )
+    return any(phrase in normalized for phrase in broad_phrases)
+
+
 async def execute_tool(
     session: Session,
     name: str,
@@ -339,15 +355,18 @@ async def execute_tool(
             f"{settings.commerce_base_url}/v1/orders",
             token=session.access_token,
         )
-        return ToolExecution(
-            output=result,
-            ui_actions=[
+        ui_actions = []
+        if _should_render_orders_table(current_user_message):
+            ui_actions.append(
                 UiAction(
                     type="orders_table",
                     label="Recent orders",
                     payload={"orders": result.get("orders", [])},
                 )
-            ],
+            )
+        return ToolExecution(
+            output=result,
+            ui_actions=ui_actions,
             trace=[
                 TraceEvent(
                     type="tool_call",

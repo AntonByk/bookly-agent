@@ -23,6 +23,13 @@ TOKEN_NORMALIZATION = {
     "times": "time",
 }
 
+SPECIFIC_DESTINATIONS = {
+    "uk", "united", "kingdom", "ireland", "france", "germany", "netherlands",
+    "belgium", "spain", "italy", "portugal", "austria", "denmark", "sweden",
+    "finland", "poland", "czechia", "canada", "australia", "zealand",
+    "singapore", "japan", "states", "usa", "us",
+}
+
 STOPWORDS = {
     "a", "an", "and", "are", "as", "at", "be", "book", "bookly", "but", "by",
     "can", "do", "does", "for", "from", "how", "i", "in", "is", "it", "me",
@@ -60,7 +67,9 @@ async def search(request: SearchRequest) -> dict:
         title_overlap = len(q & title_tokens)
         body_overlap = len(q & content_tokens)
         score = (title_overlap * 3) + body_overlap
-        if score:
+        if article["article_id"] == "delivery-times" and (q & SPECIFIC_DESTINATIONS):
+            score -= 3
+        if score > 0:
             ranked.append((score, title_overlap, article))
     ranked.sort(key=lambda pair: (pair[0], pair[1]), reverse=True)
     return {

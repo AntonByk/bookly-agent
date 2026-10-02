@@ -85,3 +85,10 @@ def test_commerce_blocks_duplicate_return_with_different_idempotency_key():
     assert eligibility.status_code == 200
     assert eligibility.json()["eligible"] is False
     assert eligibility.json()["existing_return_id"] == first.json()["return_id"]
+
+
+def test_prompt_distinguishes_clarification_policy_and_handoff():
+    prompt = build_system_prompt("2026-10-01")
+    assert "explicitly asks to speak to a human" in prompt
+    assert "Do not hand off merely because you need clarification" in prompt
+    assert "Commerce denies an action" in prompt

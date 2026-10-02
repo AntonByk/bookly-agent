@@ -16,7 +16,7 @@ class TraceEvent(BaseModel):
 
 
 class UiAction(BaseModel):
-    type: Literal["verify_email", "confirm_action"]
+    type: Literal["verify_email", "confirm_action", "human_handoff"]
     label: str
     payload: dict[str, Any] = Field(default_factory=dict)
 

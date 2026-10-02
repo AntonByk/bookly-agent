@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.agent.models import ActionConfirmRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse
+from app.agent.models import ActionConfirmRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse, TraceEvent, UiAction
 from app.agent.orchestrator import handle_message, resume_pending_request
 from app.agent.session import sessions
 from app.agent.settings import settings
@@ -46,7 +46,35 @@ async def service_status() -> dict:
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     session = sessions.get_or_create(request.session_id)
+    if session.handed_off:
+        return ChatResponse(
+            session_id=session.id,
+            message=(
+                "This conversation has been handed to a Bookly support specialist. "
+                "Start a new demo chat to continue with the AI agent."
+            ),
+            authenticated=session.authenticated,
+            ui_actions=[
+                UiAction(
+                    type="human_handoff",
+                    label="Human handoff",
+                    payload={"summary": session.handoff_summary or ""},
+                )
+            ],
+            trace=[
+                TraceEvent(
+                    type="handoff_active",
+                    message="AI handling remains disabled because this conversation is with human support.",
+                )
+            ],
+        )
     return await handle_message(session, request.message)
+
+
+@app.delete("/api/session/{session_id}")
+async def reset_session(session_id: str) -> dict:
+    sessions.delete(session_id)
+    return {"reset": True}
 
 
 @app.post("/api/auth/start")

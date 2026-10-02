@@ -1,5 +1,7 @@
+import asyncio
+
 from app.agent.session import Session
-from app.agent.tools import PUBLIC_TOOLS, VERIFIED_TOOLS, available_tools
+from app.agent.tools import PUBLIC_TOOLS, VERIFIED_TOOLS, available_tools, execute_tool
 
 
 def tool_names(tools):
@@ -34,3 +36,28 @@ def test_verified_tools_are_progressively_disclosed():
 
 def test_citation_tool_is_public_but_validated_by_software():
     assert "cite_knowledge_sources" in tool_names(PUBLIC_TOOLS)
+
+
+def test_human_handoff_is_public_and_terminal_for_pending_actions():
+    assert "request_human_handoff" in tool_names(PUBLIC_TOOLS)
+
+    session = Session(id="handoff")
+    session.pending_intent = "Return my book"
+    session.pending_actions["ACT-1"] = object()
+
+    execution = asyncio.run(
+        execute_tool(
+            session,
+            "request_human_handoff",
+            {
+                "reason_category": "customer_requested",
+                "summary": "Customer asked to speak to a human.",
+            },
+            current_user_message="Can I speak to a person?",
+        )
+    )
+
+    assert session.handed_off is True
+    assert session.pending_intent is None
+    assert session.pending_actions == {}
+    assert execution.ui_actions[0].type == "human_handoff"

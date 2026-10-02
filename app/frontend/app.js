@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const actions = document.getElementById("actions");
   const trace = document.getElementById("trace");
   const dialog = document.getElementById("auth-dialog");
+  const handoffDialog = document.getElementById("handoff-dialog");
   const services = document.getElementById("services");
   const chatForm = document.getElementById("chat-form");
   const chatInput = document.getElementById("chat-input");
@@ -187,10 +188,67 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function enterHumanHandoff(action) {
+    actions.innerHTML = "";
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    chatInput.placeholder = "Conversation handed to human support";
+    if (!handoffDialog.open) {
+      handoffDialog.showModal();
+    }
+  }
+
+  async function startNewDemoChat() {
+    const previousSessionId = sessionId;
+
+    if (previousSessionId) {
+      try {
+        await apiFetch(`/api/session/${encodeURIComponent(previousSessionId)}`, {
+          method: "DELETE"
+        });
+      } catch (error) {
+        console.warn("Bookly: server-side session reset failed; resetting local demo state.", error);
+      }
+    }
+
+    sessionId = null;
+    challengeId = null;
+    try {
+      localStorage.removeItem("bookly_session_id");
+    } catch (error) {
+      console.warn("Bookly: could not clear persisted session ID.", error);
+    }
+
+    hideThinking();
+    actions.innerHTML = "";
+    trace.innerHTML = "";
+    messages.innerHTML = "";
+    addMessage("assistant", "Hi - how can I help with your Bookly order today?");
+
+    if (dialog.open) dialog.close();
+    if (handoffDialog.open) handoffDialog.close();
+
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-code").value = "";
+    document.getElementById("auth-message").textContent = "";
+    document.getElementById("code-area").hidden = true;
+
+    chatInput.disabled = false;
+    sendButton.disabled = false;
+    chatInput.placeholder = "Ask Bookly…";
+    chatInput.value = "";
+    chatInput.focus();
+  }
+
   function renderActions(uiActions = []) {
     actions.innerHTML = "";
 
     for (const action of uiActions) {
+      if (action.type === "human_handoff") {
+        enterHumanHandoff(action);
+        continue;
+      }
+
       if (action.type === "verify_email") {
         const button = document.createElement("button");
         button.textContent = action.label;
@@ -279,6 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chatInput.value = "";
     await sendMessage(value);
   });
+
+  document.getElementById("new-demo-chat").onclick = startNewDemoChat;
+  document.getElementById("handoff-new-demo").onclick = startNewDemoChat;
+  handoffDialog.addEventListener("cancel", (event) => event.preventDefault());
 
   document.getElementById("send-code").onclick = async () => {
     const email = document.getElementById("auth-email").value;

@@ -47,3 +47,21 @@ button:disabled, input:disabled { opacity: .58; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .thinking-dots span { animation: none; opacity: .7; }
 }
+
+.header-actions { display: flex; align-items: center; gap: 12px; }
+button.compact { padding: 7px 10px; font-size: 12px; }
+.handoff-dialog { max-width: 460px; text-align: center; }
+.handoff-content { display: grid; justify-items: center; gap: 10px; }
+.handoff-content h3 { margin: 2px 0 0; }
+.handoff-content p { margin: 0; line-height: 1.5; color: #555d58; }
+.handoff-note { font-size: 13px; color: #767b77 !important; }
+.handoff-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #18201d;
+  color: white;
+  font-weight: 700;
+}

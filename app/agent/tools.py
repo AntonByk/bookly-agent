@@ -43,6 +43,39 @@ PUBLIC_TOOLS = [
     },
     {
         "type": "function",
+        "name": "request_human_handoff",
+        "description": (
+            "Hand the conversation to a human support specialist when the customer explicitly asks for a human, "
+            "or when the request cannot be resolved safely with the available Bookly knowledge and tools. "
+            "Do not use this merely because clarification is needed or because a policy outcome is unfavorable."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "reason_category": {
+                    "type": "string",
+                    "enum": [
+                        "customer_requested",
+                        "unsupported_request",
+                        "needs_human_judgment",
+                        "service_limitation",
+                    ],
+                },
+                "summary": {
+                    "type": "string",
+                    "description": (
+                        "Concise factual handoff summary for the human agent. Include only context established "
+                        "in the conversation or Bookly systems, never invented facts."
+                    ),
+                },
+            },
+            "required": ["reason_category", "summary"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
+    {
+        "type": "function",
         "name": "cite_knowledge_sources",
         "description": "Attach software-rendered citations for retrieved Bookly help articles that actually support the answer. Never cite a merely related article.",
         "parameters": {
@@ -198,6 +231,55 @@ async def execute_tool(
                     type="auth_required",
                     message="Model requested customer verification before accessing private state.",
                     data={"reason": arguments["reason"]},
+                )
+            ],
+        )
+
+    if name == "request_human_handoff":
+        if session.handed_off:
+            return ToolExecution(
+                output={"status": "already_handed_off"},
+                ui_actions=[
+                    UiAction(
+                        type="human_handoff",
+                        label="Human handoff",
+                        payload={"summary": session.handoff_summary or arguments["summary"]},
+                    )
+                ],
+                trace=[
+                    TraceEvent(
+                        type="handoff_already_active",
+                        message="Conversation was already handed to human support.",
+                    )
+                ],
+            )
+
+        session.handed_off = True
+        session.handoff_summary = arguments["summary"]
+        session.pending_intent = None
+        session.pending_actions.clear()
+
+        return ToolExecution(
+            output={
+                "status": "handed_off",
+                "reason_category": arguments["reason_category"],
+                "summary": arguments["summary"],
+            },
+            ui_actions=[
+                UiAction(
+                    type="human_handoff",
+                    label="Human handoff",
+                    payload={
+                        "reason_category": arguments["reason_category"],
+                        "summary": arguments["summary"],
+                    },
+                )
+            ],
+            trace=[
+                TraceEvent(
+                    type="human_handoff",
+                    message="The AI agent stopped handling the case and handed the conversation to human support.",
+                    data={"reason_category": arguments["reason_category"]},
                 )
             ],
         )

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bookly Support</title>
   <link rel="stylesheet" href="/static/styles.css" />
-  <script src="/static/app.js?v=0.3.4" defer></script>
+  <script src="/static/app.js?v=0.4.0" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -15,7 +15,10 @@
           <div class="brand">Bookly</div>
           <div class="subtitle">Customer support</div>
         </div>
-        <div id="services" class="services">Checking services…</div>
+        <div class="header-actions">
+          <div id="services" class="services">Checking services…</div>
+          <button id="new-demo-chat" class="secondary compact" type="button">New demo chat</button>
+        </div>
       </header>
 
       <div id="messages" class="messages">
@@ -39,6 +42,20 @@
       <div id="trace"></div>
     </aside>
   </main>
+
+  <dialog id="handoff-dialog" class="handoff-dialog">
+    <div class="handoff-content">
+      <div class="handoff-icon" aria-hidden="true">✓</div>
+      <h3>Human handoff complete</h3>
+      <p>
+        A Bookly support specialist would take over this conversation here, with the context collected so far.
+      </p>
+      <p class="handoff-note">
+        Thanks for trying the demo. Start a new demo chat to explore another use case.
+      </p>
+      <button id="handoff-new-demo" type="button">Start new demo chat</button>
+    </div>
+  </dialog>
 
   <dialog id="auth-dialog">
     <form method="dialog" id="auth-form">

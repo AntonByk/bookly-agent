@@ -16,6 +16,8 @@ class Session:
     pending_actions: dict[str, Any] = field(default_factory=dict)
     history: list[dict[str, Any]] = field(default_factory=list)
     retrieved_sources: dict[str, dict[str, str]] = field(default_factory=dict)
+    handed_off: bool = False
+    handoff_summary: str | None = None
 
     @property
     def authenticated(self) -> bool:
@@ -50,6 +52,10 @@ class SessionStore:
             if session_id not in self._sessions:
                 raise KeyError(session_id)
             return self._sessions[session_id]
+
+    def delete(self, session_id: str) -> None:
+        with self._lock:
+            self._sessions.pop(session_id, None)
 
 
 sessions = SessionStore()

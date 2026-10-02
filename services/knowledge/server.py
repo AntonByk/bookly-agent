@@ -66,7 +66,10 @@ async def search(request: SearchRequest) -> dict:
         content_tokens = tokens(article["content"])
         title_overlap = len(q & title_tokens)
         body_overlap = len(q & content_tokens)
-        score = (title_overlap * 3) + body_overlap
+        destination_overlap = len(
+            (q & SPECIFIC_DESTINATIONS) & (title_tokens | content_tokens)
+        )
+        score = (title_overlap * 3) + body_overlap + (destination_overlap * 4)
         if article["article_id"] == "delivery-times" and (q & SPECIFIC_DESTINATIONS):
             score -= 3
         if score > 0:

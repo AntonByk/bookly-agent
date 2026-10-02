@@ -9,6 +9,7 @@ from app.agent.models import TraceEvent, UiAction
 import app.agent.server as agent_server
 from app.agent.server import app as agent_app
 from app.agent.session import Session, sessions
+from app.agent.tools import _should_render_orders_table
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,
@@ -282,3 +283,10 @@ def test_confirm_service_failure_preserves_pending_action(monkeypatch):
     assert "No return was created" in response.json()["detail"]
     assert action.id in session.pending_actions
     assert not any(event["type"] == "action_result" for event in session.history)
+
+
+def test_order_table_is_only_rendered_for_broad_order_overviews():
+    assert _should_render_orders_table("Where are my orders?") is True
+    assert _should_render_orders_table("Show me my recent orders") is True
+    assert _should_render_orders_table("Has Dune actually been collected?") is False
+    assert _should_render_orders_table("Can I send one of those cookbooks back?") is False

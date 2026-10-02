@@ -41,5 +41,9 @@ class AuthVerifyRequest(BaseModel):
     code: str
 
 
+class AuthResumeRequest(BaseModel):
+    session_id: str
+
+
 class ActionConfirmRequest(BaseModel):
     session_id: str

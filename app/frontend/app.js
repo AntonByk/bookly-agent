@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error(`Bookly ${context} failed`, error);
     addMessage(
       "assistant",
-      "Something went wrong while contacting Bookly. Check the terminal or browser console and try again."
+      "Bookly couldn't complete that request right now. No action was taken. Please try again."
     );
     addTrace([
       {
@@ -366,7 +366,9 @@ document.addEventListener("DOMContentLoaded", () => {
         `${data.message}${data.demo_code ? ` Demo code: ${data.demo_code}` : ""}`;
       document.getElementById("code-area").hidden = false;
     } catch (error) {
-      document.getElementById("auth-message").textContent = String(error);
+      console.error("Bookly verification start failed", error);
+      document.getElementById("auth-message").textContent =
+        "We couldn't send a verification code right now. Please try again.";
     }
   };
 
@@ -422,7 +424,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (error) {
-      document.getElementById("auth-message").textContent = String(error);
+      console.error("Bookly code verification failed", error);
+      document.getElementById("auth-message").textContent =
+        "We couldn't verify that code. Please check it and try again.";
     } finally {
       verifyButton.disabled = false;
       verifyButton.textContent = originalLabel;

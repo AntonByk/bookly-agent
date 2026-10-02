@@ -302,7 +302,12 @@ async def execute_tool(
                 TraceEvent(
                     type="tool_call",
                     message="Searched Bookly knowledge.",
-                    data={"tool": name, "query": arguments["query"], "result_count": len(retrieved)},
+                    data={
+                        "tool": name,
+                        "query": arguments["query"],
+                        "result_count": len(retrieved),
+                        "article_ids": [source["article_id"] for source in retrieved],
+                    },
                 )
             ],
         )

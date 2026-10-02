@@ -1,8 +1,11 @@
 from fastapi.testclient import TestClient
 
-from app.agent.orchestrator import _history_as_input
+from app.agent.orchestrator import _handoff_response, _history_as_input
 from app.agent.prompts import build_system_prompt
-from app.agent.session import Session
+from app.agent.actions import PendingAction
+from app.agent.models import TraceEvent, UiAction
+from app.agent.server import app as agent_app
+from app.agent.session import Session, sessions
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,
@@ -116,3 +119,59 @@ def test_customer_order_access_is_scoped_by_identity():
 
     assert client.get("/v1/orders/ORD-2001", headers=alex_headers).status_code == 404
     assert client.get("/v1/orders/ORD-1001", headers=jamie_headers).status_code == 404
+
+
+def test_terminal_handoff_discards_pending_actions_and_only_returns_handoff_ui():
+    session = Session(
+        id="terminal-handoff",
+        access_token="server-side-token",
+        customer_id="CUST-001",
+        handed_off=True,
+    )
+    session.pending_actions["ACT-STALE"] = PendingAction(
+        id="ACT-STALE",
+        order_id="ORD-1002",
+        item_id="ITEM-OTTOLENGHI",
+        reason_category="changed_mind",
+        summary={},
+    )
+
+    response = _handoff_response(
+        session,
+        [TraceEvent(type="human_handoff", message="handoff requested")],
+        [
+            UiAction(
+                type="human_handoff",
+                label="Human handoff",
+                payload={"summary": "Customer asked for a person."},
+            )
+        ],
+    )
+
+    assert session.pending_actions == {}
+    assert response.message == "A Bookly support specialist will join this conversation soon."
+    assert [action.type for action in response.ui_actions] == ["human_handoff"]
+    assert response.trace[-1].type == "handoff_terminal"
+
+
+def test_confirm_endpoint_rejects_stale_action_after_handoff():
+    session = sessions.get_or_create("handoff-confirm-block")
+    session.access_token = "server-side-token"
+    session.customer_id = "CUST-001"
+    session.handed_off = True
+    session.pending_actions["ACT-STALE"] = PendingAction(
+        id="ACT-STALE",
+        order_id="ORD-1002",
+        item_id="ITEM-OTTOLENGHI",
+        reason_category="changed_mind",
+        summary={},
+    )
+
+    client = TestClient(agent_app)
+    response = client.post(
+        "/api/actions/ACT-STALE/confirm",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 409
+    assert "AI actions are disabled" in response.json()["detail"]

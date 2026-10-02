@@ -140,6 +140,12 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
     except KeyError:
         raise HTTPException(404, "Unknown session")
 
+    if session.handed_off:
+        raise HTTPException(
+            409,
+            "Conversation has been handed to human support; AI actions are disabled.",
+        )
+
     action = session.pending_actions.get(action_id)
     if action is None:
         raise HTTPException(404, "Unknown or expired pending action")

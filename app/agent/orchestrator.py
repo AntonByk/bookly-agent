@@ -140,6 +140,32 @@ def _discard_unrendered_actions(session: Session, ui_actions: list[Any]) -> None
                 session.pending_actions.pop(action_id, None)
 
 
+def _handoff_response(
+    session: Session,
+    traces: list[TraceEvent],
+    handoff_ui_actions: list[Any],
+) -> ChatResponse:
+    # Handoff is a terminal application state for the AI. Do not let model-generated
+    # text or other actions from the same turn survive this boundary.
+    session.pending_actions.clear()
+    message = "A Bookly support specialist will join this conversation soon."
+    traces.append(
+        TraceEvent(
+            type="handoff_terminal",
+            message="Application stopped the AI turn immediately after human handoff.",
+            data={"remaining_ai_actions_allowed": False},
+        )
+    )
+    session.record_message("assistant", message)
+    return ChatResponse(
+        session_id=session.id,
+        message=message,
+        authenticated=session.authenticated,
+        ui_actions=handoff_ui_actions,
+        trace=traces,
+    )
+
+
 def _model_failure_response(
     session: Session,
     traces: list[TraceEvent],
@@ -253,6 +279,46 @@ async def run_agent_turn(
                 ui_actions=ui_actions,
                 trace=traces,
             )
+
+        # A human handoff dominates every other tool call in the same model response.
+        # Execute it first and terminate the AI turn without executing sibling calls.
+        handoff_call = next(
+            (call for call in tool_calls if call.name == "request_human_handoff"),
+            None,
+        )
+        if handoff_call is not None:
+            try:
+                arguments = json.loads(handoff_call.arguments or "{}")
+                execution = await execute_tool(
+                    session,
+                    handoff_call.name,
+                    arguments,
+                    current_user_message=current_user_message,
+                )
+                traces.extend(execution.trace)
+                session.record_tool_result(handoff_call.name, execution.output)
+                _discard_unrendered_actions(session, ui_actions)
+                return _handoff_response(session, traces, execution.ui_actions)
+            except Exception as exc:
+                traces.append(
+                    TraceEvent(
+                        type="tool_error",
+                        message="Human handoff failed safely.",
+                        data={"tool": handoff_call.name, "error": str(exc)},
+                    )
+                )
+                session.pending_actions.clear()
+                message = (
+                    "I couldn't complete the handoff safely. No action was taken. "
+                    "Please start a new demo chat."
+                )
+                session.record_message("assistant", message)
+                return ChatResponse(
+                    session_id=session.id,
+                    message=message,
+                    authenticated=session.authenticated,
+                    trace=traces,
+                )
 
         input_items.extend(response.output)
 

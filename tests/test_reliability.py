@@ -182,3 +182,18 @@ def test_customer_copy_never_contains_en_or_em_dash():
     assert "—" not in text
     assert "–" not in text
     assert text == "Hello - your order is ready - thanks."
+
+
+def test_auth_resume_requires_verified_session():
+    session = sessions.get_or_create("resume-auth-required")
+    session.access_token = None
+    session.pending_intent = "Where is my order?"
+
+    client = TestClient(agent_app)
+    response = client.post(
+        "/api/auth/resume",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 401
+    assert session.pending_intent == "Where is my order?"

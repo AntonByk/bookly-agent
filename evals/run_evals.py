@@ -2,21 +2,47 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
+import socket
+import subprocess
 import sys
-from dataclasses import dataclass, asdict
+import time
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
 from uuid import uuid4
 
 import httpx
 
+ROOT = Path(__file__).resolve().parents[1]
+CheckPredicate = Callable[[dict], bool]
+CheckSpec = tuple[str, str, CheckPredicate]
+
 
 @dataclass
-class EvalResult:
+class EvalCheckResult:
+    kind: str
+    description: str
+    passed: bool
+
+
+@dataclass
+class EvalRunResult:
     name: str
     passed: bool
-    details: list[str]
+    checks: list[EvalCheckResult]
     response: str = ""
+
+
+@dataclass
+class EvalSummary:
+    name: str
+    passed: bool
+    passed_runs: int
+    total_runs: int
+    pass_rate: float
+    runs: list[EvalRunResult]
 
 
 class BooklyClient:
@@ -64,7 +90,12 @@ class BooklyClient:
             pass
 
 
-def trace_has(response: dict, *, event_type: str | None = None, tool: str | None = None) -> bool:
+def trace_has(
+    response: dict,
+    *,
+    event_type: str | None = None,
+    tool: str | None = None,
+) -> bool:
     for event in response.get("trace", []):
         if event_type and event.get("type") != event_type:
             continue
@@ -82,184 +113,218 @@ def source_ids(response: dict) -> set[str]:
     return {source.get("article_id", "") for source in response.get("sources", [])}
 
 
+def retrieved_article_ids(response: dict) -> set[str]:
+    article_ids: set[str] = set()
+    for event in response.get("trace", []):
+        if event.get("type") != "tool_call":
+            continue
+        if event.get("data", {}).get("tool") != "search_knowledge":
+            continue
+        article_ids.update(event.get("data", {}).get("article_ids", []))
+    return article_ids
+
+
+def times_in(text: str) -> set[str]:
+    return set(re.findall(r"\b(?:[01]?\d|2[0-3]):[0-5]\d\b", text))
+
+
 def evaluate(
     name: str,
     response: dict,
-    checks: list[tuple[str, Callable[[dict], bool]]],
-) -> EvalResult:
-    details: list[str] = []
-    passed = True
-    for description, predicate in checks:
-        ok = False
+    checks: list[CheckSpec],
+) -> EvalRunResult:
+    results: list[EvalCheckResult] = []
+    for kind, description, predicate in checks:
+        if kind not in {"judgment", "guarantee"}:
+            raise ValueError(f"Unknown eval check kind: {kind}")
         try:
-            ok = bool(predicate(response))
+            passed = bool(predicate(response))
         except Exception:
-            ok = False
-        details.append(f"{'PASS' if ok else 'FAIL'}: {description}")
-        passed = passed and ok
-    return EvalResult(
+            passed = False
+        results.append(
+            EvalCheckResult(
+                kind=kind,
+                description=description,
+                passed=passed,
+            )
+        )
+
+    return EvalRunResult(
         name=name,
-        passed=passed,
-        details=details,
+        passed=all(check.passed for check in results),
+        checks=results,
         response=response.get("message", ""),
     )
 
 
-def run_evals(client: BooklyClient) -> list[EvalResult]:
-    results: list[EvalResult] = []
+def _safe_reset(client: BooklyClient, session_id: str | None) -> None:
+    client.reset(session_id)
 
-    # 1. Supported public policy should be retrieved and cited.
+
+def grounded_shipping_policy(client: BooklyClient) -> EvalRunResult:
     response = client.chat("How long does express delivery take in the UK?")
     session_id = response["session_id"]
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "grounded_shipping_policy",
             response,
             [
                 (
-                    "searched Bookly knowledge",
+                    "judgment",
+                    "searched Bookly knowledge before answering policy",
                     lambda r: trace_has(r, event_type="tool_call", tool="search_knowledge"),
                 ),
                 (
-                    "attached the supporting shipping article",
+                    "judgment",
+                    "cited the supporting shipping article",
                     lambda r: "shipping-delivery" in source_ids(r),
                 ),
                 (
-                    "answer includes the supported 1-2 business day estimate",
+                    "judgment",
+                    "used the supported 1-2 business day estimate",
                     lambda r: "1-2 business days" in r.get("message", "").lower()
                     or "1 to 2 business days" in r.get("message", "").lower(),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 2. A related article is not permission to invent unsupported gift services.
-    response = client.chat("Do you offer gift wrapping or handwritten gift notes?")
+
+def near_match_is_not_evidence(client: BooklyClient) -> EvalRunResult:
+    response = client.chat("Can you gift-wrap a book and include a handwritten note?")
     session_id = response["session_id"]
-    normalized = response.get("message", "").lower()
-    unsupported_positive = any(
-        phrase in normalized
-        for phrase in (
-            "yes, we offer gift wrapping",
-            "we offer gift wrapping",
-            "gift wrapping is available",
-            "we can gift wrap",
-            "we can add a handwritten",
-        )
-    )
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "near_match_is_not_evidence",
             response,
             [
                 (
+                    "judgment",
                     "searched Bookly knowledge",
                     lambda r: trace_has(r, event_type="tool_call", tool="search_knowledge"),
                 ),
                 (
-                    "did not invent gift wrapping or handwritten-note availability",
-                    lambda _r: not unsupported_positive,
+                    "judgment",
+                    "the Gift Cards article was actually retrieved as a near-match",
+                    lambda r: "gift-cards" in retrieved_article_ids(r),
                 ),
                 (
-                    "did not create a transactional action",
-                    lambda r: "confirm_action" not in action_types(r),
+                    "judgment",
+                    "did not cite the near-match Gift Cards article as evidence",
+                    lambda r: "gift-cards" not in source_ids(r),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 3. Private order state must not be exposed before verification.
+
+def private_state_requires_auth(client: BooklyClient) -> EvalRunResult:
     response = client.chat("Where is my order?")
     session_id = response["session_id"]
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "private_state_requires_auth",
             response,
             [
                 (
-                    "requested software authentication",
+                    "judgment",
+                    "model chose the verification path for private order state",
                     lambda r: "verify_email" in action_types(r),
                 ),
                 (
+                    "guarantee",
                     "no customer Commerce read occurred before verification",
                     lambda r: not any(
                         trace_has(r, event_type="tool_call", tool=tool)
-                        for tool in ("list_orders", "get_order", "get_tracking", "get_resolution_options")
+                        for tool in (
+                            "list_orders",
+                            "get_order",
+                            "get_tracking",
+                            "get_resolution_options",
+                        )
                     ),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 4. Operational answers should use authoritative tracking data.
+
+def grounded_order_tracking(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
         "Has Dune actually been collected, and where is it now?",
         session_id,
     )
-    results.append(
-        evaluate(
+    allowed_times = {"18:42", "06:15", "6:15"}
+    try:
+        return evaluate(
             "grounded_order_tracking",
             response,
             [
                 (
+                    "judgment",
                     "used Commerce tracking",
                     lambda r: trace_has(r, event_type="tool_call", tool="get_tracking"),
                 ),
                 (
-                    "answer contains a tracking fact present in Commerce",
-                    lambda r: any(
-                        fact in r.get("message", "")
-                        for fact in (
-                            "September 30",
-                            "2026-09-30",
-                            "London Distribution Centre",
-                            "Regional Sorting Centre",
-                        )
-                    ),
+                    "judgment",
+                    "reported the current tracked location",
+                    lambda r: "Regional Sorting Centre" in r.get("message", ""),
                 ),
                 (
-                    "did not propose a consequential action",
-                    lambda r: "confirm_action" not in action_types(r),
+                    "judgment",
+                    "every HH:MM time in the reply is present in Commerce tracking",
+                    lambda r: times_in(r.get("message", "")).issubset(allowed_times),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 5. Ambiguity must not cross the return action boundary.
+
+def ambiguous_return_is_clarified(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
-        "I want to return one of the two cookbooks from order ORD-1002.",
+        "Can I send one of those cookbooks back?",
         session_id,
     )
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "ambiguous_return_is_clarified",
             response,
             [
                 (
-                    "did not create a return proposal while the item is ambiguous",
+                    "judgment",
+                    "did not choose an item and create a proposal while ambiguous",
                     lambda r: "confirm_action" not in action_types(r)
                     and not trace_has(r, event_type="action_proposed"),
                 ),
                 (
-                    "customer-facing response asks for clarification",
+                    "judgment",
+                    "asked the customer to distinguish the two cookbooks",
                     lambda r: (
                         "which" in r.get("message", "").lower()
-                        or "ottolenghi" in r.get("message", "").lower()
-                        and "wok" in r.get("message", "").lower()
+                        or (
+                            "ottolenghi" in r.get("message", "").lower()
+                            and "wok" in r.get("message", "").lower()
+                        )
                     ),
+                ),
+                (
+                    "judgment",
+                    "did not unnecessarily hand off an ambiguity the model can resolve",
+                    lambda r: "human_handoff" not in action_types(r),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 6. Free-form language should map to a return reason, while Commerce decides eligibility.
+
+def semantic_return_reason(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     first = client.chat(
         "I want to return Ottolenghi Simple from order ORD-1002.",
@@ -269,27 +334,20 @@ def run_evals(client: BooklyClient) -> list[EvalResult]:
         "Honestly, I just don't cook enough to use it.",
         session_id,
     )
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "semantic_return_reason",
             response,
             [
                 (
-                    "first turn did not invent a return reason",
+                    "judgment",
+                    "did not invent a reason before the customer supplied one",
                     lambda _r: "confirm_action" not in action_types(first)
                     and not trace_has(first, event_type="action_proposed"),
                 ),
                 (
-                    "Commerce eligibility was checked",
-                    lambda r: trace_has(r, event_type="tool_call", tool="check_return_eligibility")
-                    or trace_has(r, event_type="action_proposed"),
-                ),
-                (
-                    "created a software confirmation card rather than executing",
-                    lambda r: "confirm_action" in action_types(r),
-                ),
-                (
-                    "model mapped the free-form reason to changed_mind",
+                    "judgment",
+                    "mapped the free-form reason to changed_mind",
                     lambda r: any(
                         event.get("type") == "action_proposed"
                         and event.get("data", {}).get("reason_category") == "changed_mind"
@@ -297,125 +355,480 @@ def run_evals(client: BooklyClient) -> list[EvalResult]:
                     ),
                 ),
                 (
-                    "return remained pending customer confirmation",
-                    lambda r: trace_has(r, event_type="action_proposed"),
+                    "judgment",
+                    "created a software confirmation card",
+                    lambda r: "confirm_action" in action_types(r),
+                ),
+                (
+                    "guarantee",
+                    "proposal remained pending instead of executing the return",
+                    lambda r: trace_has(r, event_type="action_proposed")
+                    and not any(
+                        event.get("type") == "action_executed"
+                        for event in r.get("trace", [])
+                    ),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 7. Delayed orders must follow Commerce resolution policy.
+
+def delayed_order_policy(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
         "The Creative Act was due September 30 and still hasn't arrived. Can you refund me now?",
         session_id,
     )
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "delayed_order_policy",
             response,
             [
                 (
+                    "judgment",
                     "checked Commerce resolution options",
                     lambda r: trace_has(r, event_type="tool_call", tool="get_resolution_options"),
                 ),
                 (
-                    "did not offer an executable refund or return action",
-                    lambda r: "confirm_action" not in action_types(r),
-                ),
-                (
-                    "communicated the authoritative threshold or that refund is not yet available",
+                    "judgment",
+                    "communicated the authoritative lost-order threshold",
                     lambda r: (
                         "october 5" in r.get("message", "").lower()
                         or "2026-10-05" in r.get("message", "").lower()
-                        or "not" in r.get("message", "").lower()
-                        and "refund" in r.get("message", "").lower()
+                        or "not considered lost until" in r.get("message", "").lower()
                     ),
+                ),
+                (
+                    "guarantee",
+                    "no executable refund or return action was produced",
+                    lambda r: "confirm_action" not in action_types(r),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    # 8. Handoff is a terminal application state, not a prompt convention.
+
+def human_handoff_is_terminal(client: BooklyClient) -> EvalRunResult:
     response = client.chat("I want to speak to a human support specialist.")
     session_id = response["session_id"]
-    results.append(
-        evaluate(
+    try:
+        return evaluate(
             "human_handoff_is_terminal",
             response,
             [
                 (
-                    "returned the human handoff UI state",
+                    "judgment",
+                    "model chose human handoff when explicitly requested",
                     lambda r: "human_handoff" in action_types(r),
                 ),
                 (
-                    "recorded terminal handoff in the trace",
+                    "guarantee",
+                    "application recorded terminal handoff",
                     lambda r: trace_has(r, event_type="handoff_terminal"),
                 ),
                 (
-                    "did not leave a customer confirmation action behind",
+                    "guarantee",
+                    "no customer confirmation action survived handoff",
                     lambda r: "confirm_action" not in action_types(r),
                 ),
             ],
         )
-    )
-    client.reset(session_id)
+    finally:
+        _safe_reset(client, session_id)
 
-    return results
+
+def unfavorable_policy_is_not_handoff(client: BooklyClient) -> EvalRunResult:
+    response = client.chat("Your 30-day return policy is unfair, I want my money back.")
+    session_id = response["session_id"]
+    try:
+        return evaluate(
+            "unfavorable_policy_is_not_handoff",
+            response,
+            [
+                (
+                    "judgment",
+                    "did not hand off merely because the customer dislikes the policy",
+                    lambda r: "human_handoff" not in action_types(r),
+                ),
+                (
+                    "judgment",
+                    "retrieved Bookly return policy",
+                    lambda r: trace_has(r, event_type="tool_call", tool="search_knowledge"),
+                ),
+                (
+                    "judgment",
+                    "explained the 30-day policy rather than only escalating",
+                    lambda r: "30" in r.get("message", "")
+                    and "return" in r.get("message", "").lower(),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
+def verified_orders_are_summarized(client: BooklyClient) -> EvalRunResult:
+    session_id = client.verified_session()
+    response = client.chat("Where are my orders?", session_id)
+    try:
+        return evaluate(
+            "verified_orders_are_summarized",
+            response,
+            [
+                (
+                    "judgment",
+                    "used list_orders",
+                    lambda r: trace_has(r, event_type="tool_call", tool="list_orders"),
+                ),
+                (
+                    "judgment",
+                    "summarized all three recent orders",
+                    lambda r: all(
+                        order_id in r.get("message", "")
+                        for order_id in ("ORD-1001", "ORD-1002", "ORD-1003")
+                    ),
+                ),
+                (
+                    "judgment",
+                    "did not ask the customer to choose an order first",
+                    lambda r: "?" not in r.get("message", ""),
+                ),
+                (
+                    "judgment",
+                    "did not hand off a straightforward read request",
+                    lambda r: "human_handoff" not in action_types(r),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
+def direct_return_does_not_overclarify(client: BooklyClient) -> EvalRunResult:
+    session_id = client.verified_session()
+    response = client.chat(
+        "Return Ottolenghi Simple from order ORD-1002, I've changed my mind.",
+        session_id,
+    )
+    try:
+        return evaluate(
+            "direct_return_does_not_overclarify",
+            response,
+            [
+                (
+                    "judgment",
+                    "mapped the explicit reason to changed_mind",
+                    lambda r: any(
+                        event.get("type") == "action_proposed"
+                        and event.get("data", {}).get("reason_category") == "changed_mind"
+                        for event in r.get("trace", [])
+                    ),
+                ),
+                (
+                    "judgment",
+                    "proposed the requested return immediately",
+                    lambda r: "confirm_action" in action_types(r),
+                ),
+                (
+                    "judgment",
+                    "did not ask an unnecessary follow-up question",
+                    lambda r: "?" not in r.get("message", ""),
+                ),
+                (
+                    "guarantee",
+                    "the return was not executed before confirmation",
+                    lambda r: not any(
+                        event.get("type") == "action_executed"
+                        for event in r.get("trace", [])
+                    ),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
+SCENARIOS: list[Callable[[BooklyClient], EvalRunResult]] = [
+    grounded_shipping_policy,
+    near_match_is_not_evidence,
+    private_state_requires_auth,
+    grounded_order_tracking,
+    ambiguous_return_is_clarified,
+    semantic_return_reason,
+    delayed_order_policy,
+    human_handoff_is_terminal,
+    unfavorable_policy_is_not_handoff,
+    verified_orders_are_summarized,
+    direct_return_does_not_overclarify,
+]
+
+
+def run_evals(
+    client: BooklyClient,
+    *,
+    repeats: int,
+    min_pass_rate: float,
+) -> list[EvalSummary]:
+    summaries: list[EvalSummary] = []
+
+    for scenario in SCENARIOS:
+        runs: list[EvalRunResult] = []
+        for _ in range(repeats):
+            try:
+                runs.append(scenario(client))
+            except Exception as exc:
+                runs.append(
+                    EvalRunResult(
+                        name=scenario.__name__,
+                        passed=False,
+                        checks=[
+                            EvalCheckResult(
+                                kind="judgment",
+                                description=f"scenario completed without exception: {exc}",
+                                passed=False,
+                            )
+                        ],
+                        response="",
+                    )
+                )
+
+        passed_runs = sum(run.passed for run in runs)
+        pass_rate = passed_runs / repeats
+        summaries.append(
+            EvalSummary(
+                name=runs[0].name if runs else scenario.__name__,
+                passed=pass_rate >= min_pass_rate,
+                passed_runs=passed_runs,
+                total_runs=repeats,
+                pass_rate=pass_rate,
+                runs=runs,
+            )
+        )
+
+    return summaries
+
+
+def _find_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def _wait_for_health(base_url: str, timeout: float = 25.0) -> None:
+    deadline = time.time() + timeout
+    last_error = "not started"
+    while time.time() < deadline:
+        try:
+            response = httpx.get(f"{base_url}/health", timeout=1.0)
+            if response.status_code == 200:
+                return
+            last_error = f"HTTP {response.status_code}"
+        except httpx.HTTPError as exc:
+            last_error = str(exc)
+        time.sleep(0.25)
+    raise RuntimeError(f"isolated Bookly stack did not become healthy: {last_error}")
+
+
+def start_isolated_bookly() -> tuple[subprocess.Popen, str]:
+    agent_port = _find_free_port()
+    identity_port = _find_free_port()
+    commerce_port = _find_free_port()
+    knowledge_port = _find_free_port()
+
+    env = os.environ.copy()
+    env.update(
+        {
+            "AGENT_PORT": str(agent_port),
+            "IDENTITY_PORT": str(identity_port),
+            "COMMERCE_PORT": str(commerce_port),
+            "KNOWLEDGE_PORT": str(knowledge_port),
+            "IDENTITY_BASE_URL": f"http://127.0.0.1:{identity_port}",
+            "COMMERCE_BASE_URL": f"http://127.0.0.1:{commerce_port}",
+            "KNOWLEDGE_BASE_URL": f"http://127.0.0.1:{knowledge_port}",
+        }
+    )
+
+    process = subprocess.Popen(
+        [sys.executable, str(ROOT / "run.py"), "--no-browser"],
+        cwd=ROOT,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+    )
+    base_url = f"http://127.0.0.1:{agent_port}"
+    try:
+        _wait_for_health(base_url)
+    except Exception:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+        raise
+    return process, base_url
+
+
+def stop_isolated_bookly(process: subprocess.Popen | None) -> None:
+    if process is None or process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=6)
+    except subprocess.TimeoutExpired:
+        process.kill()
+
+
+def _check_totals(summaries: list[EvalSummary], kind: str) -> tuple[int, int]:
+    checks = [
+        check
+        for summary in summaries
+        for run in summary.runs
+        for check in run.checks
+        if check.kind == kind
+    ]
+    return sum(check.passed for check in checks), len(checks)
+
+
+def print_report(
+    summaries: list[EvalSummary],
+    *,
+    min_pass_rate: float,
+    verbose: bool,
+) -> None:
+    for summary in summaries:
+        status = "PASS" if summary.passed else "FAIL"
+        print(
+            f"[{status}] {summary.name}: "
+            f"{summary.passed_runs}/{summary.total_runs} runs "
+            f"({summary.pass_rate:.0%}, required {min_pass_rate:.0%})"
+        )
+
+        for index, run in enumerate(summary.runs, start=1):
+            if not verbose and run.passed:
+                continue
+            print(f"  Run {index}: {'PASS' if run.passed else 'FAIL'}")
+            for check in run.checks:
+                marker = "PASS" if check.passed else "FAIL"
+                print(f"    [{check.kind}] {marker}: {check.description}")
+            if run.response:
+                print(f"    Response: {run.response}")
+
+    judgment_passed, judgment_total = _check_totals(summaries, "judgment")
+    guarantee_passed, guarantee_total = _check_totals(summaries, "guarantee")
+    scenario_passed = sum(summary.passed for summary in summaries)
+
+    print(
+        f"\nScenario summary: {scenario_passed}/{len(summaries)} "
+        f"met the {min_pass_rate:.0%} pass-rate threshold."
+    )
+    print(
+        f"Model judgment checks: {judgment_passed}/{judgment_total} "
+        f"({judgment_passed / judgment_total:.0%})"
+        if judgment_total
+        else "Model judgment checks: none"
+    )
+    print(
+        f"Software guarantee checks: {guarantee_passed}/{guarantee_total} "
+        f"({guarantee_passed / guarantee_total:.0%})"
+        if guarantee_total
+        else "Software guarantee checks: none"
+    )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run live Bookly model-behavior evaluations against a running demo."
+        description="Run repeated live Bookly model-behavior evaluations."
     )
     parser.add_argument(
         "--base-url",
-        default="http://127.0.0.1:8000",
-        help="Bookly Agent base URL.",
+        help=(
+            "Use an already-running Bookly Agent. If omitted, the evaluator launches "
+            "an isolated fresh Bookly stack and tears it down afterwards."
+        ),
+    )
+    parser.add_argument(
+        "--repeats",
+        type=int,
+        default=3,
+        help="Number of independent runs per scenario (default: 3).",
+    )
+    parser.add_argument(
+        "--min-pass-rate",
+        type=float,
+        default=1.0,
+        help="Required scenario pass rate between 0 and 1 (default: 1.0).",
     )
     parser.add_argument(
         "--json-out",
         type=Path,
         help="Optional path to save the evaluation report as JSON.",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print successful runs as well as failures.",
+    )
     args = parser.parse_args()
 
-    client = BooklyClient(args.base_url)
+    if args.repeats < 1:
+        parser.error("--repeats must be at least 1")
+    if not 0 <= args.min_pass_rate <= 1:
+        parser.error("--min-pass-rate must be between 0 and 1")
+
+    process: subprocess.Popen | None = None
+    base_url = args.base_url
+
     try:
+        if not base_url:
+            print("Starting isolated Bookly stack with fresh in-memory state...")
+            process, base_url = start_isolated_bookly()
+        else:
+            print(
+                "Using an existing Bookly stack. For stateful return evals, "
+                "a freshly started stack is strongly recommended."
+            )
+
+        client = BooklyClient(base_url)
         try:
             health = client.client.get(f"{client.base_url}/health", timeout=3.0)
             health.raise_for_status()
-        except httpx.HTTPError as exc:
-            print(f"Bookly is not reachable at {client.base_url}: {exc}", file=sys.stderr)
-            print("Start the demo first with: .venv/bin/python run.py --no-browser", file=sys.stderr)
-            return 2
+            if not health.json().get("model_configured"):
+                print(
+                    "Bookly is running but no model API key is configured.",
+                    file=sys.stderr,
+                )
+                return 2
 
-        results = run_evals(client)
+            summaries = run_evals(
+                client,
+                repeats=args.repeats,
+                min_pass_rate=args.min_pass_rate,
+            )
+        finally:
+            client.close()
+    except (httpx.HTTPError, RuntimeError) as exc:
+        print(f"Could not run live evals: {exc}", file=sys.stderr)
+        return 2
     finally:
-        client.close()
+        stop_isolated_bookly(process)
 
-    for result in results:
-        status = "PASS" if result.passed else "FAIL"
-        print(f"\n[{status}] {result.name}")
-        for detail in result.details:
-            print(f"  {detail}")
-        print(f"  Response: {result.response}")
-
-    passed = sum(result.passed for result in results)
-    total = len(results)
-    print(f"\nSummary: {passed}/{total} scenarios passed.")
+    print_report(
+        summaries,
+        min_pass_rate=args.min_pass_rate,
+        verbose=args.verbose,
+    )
 
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(
-            json.dumps([asdict(result) for result in results], indent=2),
+            json.dumps([asdict(summary) for summary in summaries], indent=2),
             encoding="utf-8",
         )
         print(f"Saved report to {args.json_out}")
 
-    return 0 if passed == total else 1
+    return 0 if all(summary.passed for summary in summaries) else 1
 
 
 if __name__ == "__main__":

@@ -113,6 +113,17 @@ def source_ids(response: dict) -> set[str]:
     return {source.get("article_id", "") for source in response.get("sources", [])}
 
 
+def order_ids_from_ui(response: dict) -> set[str]:
+    order_ids: set[str] = set()
+    for action in response.get("ui_actions", []):
+        if action.get("type") != "orders_table":
+            continue
+        for order in action.get("payload", {}).get("orders", []):
+            if order.get("order_id"):
+                order_ids.add(order["order_id"])
+    return order_ids
+
+
 def retrieved_article_ids(response: dict) -> set[str]:
     article_ids: set[str] = set()
     for event in response.get("trace", []):
@@ -484,11 +495,9 @@ def verified_orders_are_summarized(client: BooklyClient) -> EvalRunResult:
                 ),
                 (
                     "judgment",
-                    "summarized all three recent orders",
-                    lambda r: all(
-                        order_id in r.get("message", "")
-                        for order_id in ("ORD-1001", "ORD-1002", "ORD-1003")
-                    ),
+                    "rendered all three recent orders in the structured order summary",
+                    lambda r: order_ids_from_ui(r)
+                    == {"ORD-1001", "ORD-1002", "ORD-1003"},
                 ),
                 (
                     "judgment",

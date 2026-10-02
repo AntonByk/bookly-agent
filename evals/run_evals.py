@@ -515,6 +515,57 @@ def verified_orders_are_summarized(client: BooklyClient) -> EvalRunResult:
         _safe_reset(client, session_id)
 
 
+def return_item_count_is_consistent(client: BooklyClient) -> EvalRunResult:
+    session_id = client.verified_session()
+    response = client.chat("I want to return a book.", session_id)
+    message = response.get("message", "").lower()
+    listed_titles = [
+        title
+        for title in (
+            "ottolenghi simple",
+            "the wok",
+            "dune",
+            "the creative act",
+        )
+        if title in message
+    ]
+    try:
+        return evaluate(
+            "return_item_count_is_consistent",
+            response,
+            [
+                (
+                    "judgment",
+                    "used customer order context to resolve the return request",
+                    lambda r: trace_has(r, event_type="tool_call", tool="list_orders"),
+                ),
+                (
+                    "judgment",
+                    "did not confuse the number of orders with the number of returnable items",
+                    lambda _r: not (
+                        len(listed_titles) == 4
+                        and "three orders" in message
+                        and "four" not in message
+                        and "4 " not in message
+                    ),
+                ),
+                (
+                    "judgment",
+                    "did not create a return proposal before the customer selected an item and reason",
+                    lambda r: "confirm_action" not in action_types(r)
+                    and not trace_has(r, event_type="action_proposed"),
+                ),
+                (
+                    "judgment",
+                    "did not hand off a normal return clarification",
+                    lambda r: "human_handoff" not in action_types(r),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
 def direct_return_does_not_overclarify(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
@@ -570,6 +621,7 @@ SCENARIOS: list[Callable[[BooklyClient], EvalRunResult]] = [
     human_handoff_is_terminal,
     unfavorable_policy_is_not_handoff,
     verified_orders_are_summarized,
+    return_item_count_is_consistent,
     direct_return_does_not_overclarify,
 ]
 

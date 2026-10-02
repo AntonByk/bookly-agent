@@ -401,6 +401,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function renderVerificationPrompt() {
+    if (actions.querySelector(".verification-prompt")) return;
+
+    const card = document.createElement("div");
+    card.className = "verification-prompt";
+
+    const copy = document.createElement("div");
+    copy.className = "verification-prompt-copy";
+
+    const title = document.createElement("strong");
+    title.textContent = "Verification needed";
+
+    const detail = document.createElement("span");
+    detail.textContent = "Verify your email to continue with private account or order details.";
+
+    copy.append(title, detail);
+
+    const button = document.createElement("button");
+    button.className = "button button-ghost verification-prompt-button";
+    button.type = "button";
+    button.textContent = "Verify email";
+    button.addEventListener("click", openAuthDialog);
+
+    card.append(copy, button);
+    actions.appendChild(card);
+  }
+
   function renderReturnCard(action) {
     const card = document.createElement("section");
     card.className = "action-card";
@@ -562,6 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (action.type === "verify_email") {
+        renderVerificationPrompt();
         openAuthDialog();
         continue;
       }
@@ -711,6 +739,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       closeAuthDialog();
+      actions.querySelector(".verification-prompt")?.remove();
       sessionStateLabel.textContent = "Verified";
       document.getElementById("session-state").classList.add("verified");
       addTrace([

@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "Where are my orders?",
       "Can I return a book?",
       "How long does delivery take to Finland?",
-      "Can I speak to a human?"
+      "Can I use two promo codes?"
     ];
 
     for (const prompt of prompts) {
@@ -526,7 +526,8 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionId = null;
     challengeId = null;
     conversationLocked = false;
-    sessionStateLabel.textContent = "AI Concierge";
+    sessionStateLabel.textContent = "Guest";
+    document.getElementById("session-state").classList.remove("verified");
 
     hideThinking();
     actions.innerHTML = "";
@@ -711,6 +712,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       closeAuthDialog();
       sessionStateLabel.textContent = "Verified";
+      document.getElementById("session-state").classList.add("verified");
       addTrace([
         {
           type: "verification_completed",

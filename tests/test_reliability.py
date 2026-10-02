@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.agent.orchestrator import _handoff_response, _history_as_input
+from app.agent.orchestrator import _handoff_response, _history_as_input, _sanitize_customer_text
 from app.agent.prompts import build_system_prompt
 from app.agent.actions import PendingAction
 from app.agent.models import TraceEvent, UiAction
@@ -175,3 +175,10 @@ def test_confirm_endpoint_rejects_stale_action_after_handoff():
 
     assert response.status_code == 409
     assert "AI actions are disabled" in response.json()["detail"]
+
+
+def test_customer_copy_never_contains_en_or_em_dash():
+    text = _sanitize_customer_text("Hello — your order is ready – thanks.")
+    assert "—" not in text
+    assert "–" not in text
+    assert text == "Hello - your order is ready - thanks."

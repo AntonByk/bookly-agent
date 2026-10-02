@@ -22,6 +22,11 @@ from app.agent.tools import available_tools, execute_tool
 logger = logging.getLogger("bookly.agent")
 
 
+def _sanitize_customer_text(text: str) -> str:
+    """Normalize punctuation that is disallowed in Bookly customer-facing copy."""
+    return text.replace("—", "-").replace("–", "-")
+
+
 def _history_as_input(session: Session) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
     for event in session.history:
@@ -270,6 +275,7 @@ async def run_agent_turn(
             text = (response.output_text or "").strip()
             if not text:
                 text = "I couldn't complete that request safely. Please try again."
+            text = _sanitize_customer_text(text)
             session.record_message("assistant", text)
             return ChatResponse(
                 session_id=session.id,

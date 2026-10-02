@@ -46,6 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addMessage(role, text, sources = []) {
+    if (role === "assistant") {
+      text = String(text).replaceAll("—", "-").replaceAll("–", "-");
+    }
+
     const wrap = document.createElement("div");
     wrap.className = `message-wrap ${role}`;
 

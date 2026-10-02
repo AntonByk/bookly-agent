@@ -610,10 +610,13 @@ def run_evals(
     return summaries
 
 
-def _find_free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return int(sock.getsockname()[1])
+def _find_free_ports(count: int) -> list[int]:
+    ports: set[int] = set()
+    while len(ports) < count:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(("127.0.0.1", 0))
+            ports.add(int(sock.getsockname()[1]))
+    return list(ports)
 
 
 def _wait_for_health(base_url: str, timeout: float = 25.0) -> None:
@@ -632,10 +635,7 @@ def _wait_for_health(base_url: str, timeout: float = 25.0) -> None:
 
 
 def start_isolated_bookly() -> tuple[subprocess.Popen, str]:
-    agent_port = _find_free_port()
-    identity_port = _find_free_port()
-    commerce_port = _find_free_port()
-    knowledge_port = _find_free_port()
+    agent_port, identity_port, commerce_port, knowledge_port = _find_free_ports(4)
 
     env = os.environ.copy()
     env.update(

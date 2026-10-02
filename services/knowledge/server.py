@@ -9,6 +9,17 @@ from pydantic import BaseModel, Field
 ROOT = Path(__file__).resolve().parents[2]
 ARTICLES = json.loads((ROOT / "data" / "knowledge.json").read_text())["articles"]
 
+TOKEN_NORMALIZATION = {
+    "deliveries": "delivery",
+    "returns": "return",
+    "refunds": "refund",
+    "orders": "order",
+    "payments": "payment",
+    "discounts": "discount",
+    "codes": "code",
+    "items": "item",
+}
+
 STOPWORDS = {
     "a", "an", "and", "are", "as", "at", "be", "book", "bookly", "but", "by",
     "can", "do", "does", "for", "from", "how", "i", "in", "is", "it", "me",
@@ -24,11 +35,11 @@ class SearchRequest(BaseModel):
 
 
 def tokens(text: str) -> set[str]:
-    return {
-        token
+    normalized = {
+        TOKEN_NORMALIZATION.get(token, token)
         for token in re.findall(r"[a-z0-9]+", text.lower())
-        if token not in STOPWORDS
     }
+    return {token for token in normalized if token not in STOPWORDS}
 
 
 @app.get("/health")

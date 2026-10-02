@@ -80,10 +80,16 @@ async def reset_session(session_id: str) -> dict:
 @app.post("/api/auth/start")
 async def auth_start(request: AuthStartRequest) -> dict:
     session = sessions.get_or_create(request.session_id)
-    async with httpx.AsyncClient(timeout=3.0) as client:
-        response = await client.post(
-            f"{settings.identity_base_url}/v1/verification/start",
-            json={"email": request.email},
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.post(
+                f"{settings.identity_base_url}/v1/verification/start",
+                json={"email": request.email},
+            )
+    except httpx.RequestError:
+        raise HTTPException(
+            503,
+            "Bookly couldn't reach the verification service. No account access was granted. Please try again.",
         )
     if response.status_code >= 400:
         raise HTTPException(response.status_code, "Identity service unavailable")
@@ -103,10 +109,16 @@ async def auth_verify(request: AuthVerifyRequest) -> dict:
     except KeyError:
         raise HTTPException(404, "Unknown session")
 
-    async with httpx.AsyncClient(timeout=3.0) as client:
-        response = await client.post(
-            f"{settings.identity_base_url}/v1/verification/verify",
-            json={"challenge_id": request.challenge_id, "code": request.code},
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.post(
+                f"{settings.identity_base_url}/v1/verification/verify",
+                json={"challenge_id": request.challenge_id, "code": request.code},
+            )
+    except httpx.RequestError:
+        raise HTTPException(
+            503,
+            "Bookly couldn't reach the verification service. No account access was granted. Please try again.",
         )
     if response.status_code >= 400:
         detail = response.json().get("detail", "Verification failed")
@@ -167,18 +179,24 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
     if not session.access_token:
         raise HTTPException(401, "Customer is not verified")
 
-    async with httpx.AsyncClient(timeout=4.0) as client:
-        response = await client.post(
-            f"{settings.commerce_base_url}/v1/returns",
-            headers={
-                "Authorization": f"Bearer {session.access_token}",
-                "Idempotency-Key": action.id,
-            },
-            json={
-                "order_id": action.order_id,
-                "item_id": action.item_id,
-                "reason_category": action.reason_category,
-            },
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            response = await client.post(
+                f"{settings.commerce_base_url}/v1/returns",
+                headers={
+                    "Authorization": f"Bearer {session.access_token}",
+                    "Idempotency-Key": action.id,
+                },
+                json={
+                    "order_id": action.order_id,
+                    "item_id": action.item_id,
+                    "reason_category": action.reason_category,
+                },
+            )
+    except httpx.RequestError:
+        raise HTTPException(
+            503,
+            "Bookly couldn't reach the order service. No return was created. Please try again.",
         )
 
     if response.status_code >= 400:

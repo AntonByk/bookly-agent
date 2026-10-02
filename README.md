@@ -89,6 +89,24 @@ Public policy answers come from Knowledge. Customer/order facts come from Commer
 
 A related article is not automatically evidence. For example, the help centre has Gift Cards content but deliberately does not establish whether gift wrapping or handwritten notes are available.
 
+## Customer experience
+
+The final demo UI is intentionally customer-facing rather than an engineering console:
+
+- a broad Bookly concierge welcome rather than an order-only greeting;
+- automatic two-step verification when private customer data is needed;
+- visible Guest -> Verified state in the header;
+- structured recent-order cards rendered from authoritative Commerce data;
+- software-rendered return confirmation with exact refund and return terms;
+- polished help-centre citations, loading states and human-handoff modal;
+- no agent trace in the default experience.
+
+For architecture discussion, append `?debug=1` to the local URL to reveal the observable application trace without changing the customer experience:
+
+```text
+http://127.0.0.1:8000/?debug=1
+```
+
 ## Demo data
 
 All demo behavior is pinned to:

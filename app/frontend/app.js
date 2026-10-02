@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
   if (debugEnabled) {
     debugPanel.hidden = false;
+    document.body.classList.add("debug-mode");
   }
 
   function appendSafeFormattedText(container, text) {
@@ -199,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.appendChild(data);
       }
 
-      trace.prepend(el);
+      trace.appendChild(el);
     }
   }
 

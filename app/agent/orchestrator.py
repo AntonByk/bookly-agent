@@ -30,6 +30,19 @@ ORDER_TABLE_SUPPRESSING_TOOLS = {
 }
 
 
+def _merge_ui_actions(
+    ui_actions: list[Any],
+    new_actions: list[Any],
+    *,
+    tool_name: str,
+) -> list[Any]:
+    merged = list(ui_actions)
+    if tool_name in ORDER_TABLE_SUPPRESSING_TOOLS:
+        merged = [action for action in merged if action.type != "orders_table"]
+    merged.extend(new_actions)
+    return merged
+
+
 def _sanitize_customer_text(text: str) -> str:
     """Normalize punctuation that is disallowed in Bookly customer-facing copy."""
     return text.replace("—", "-").replace("–", "-")
@@ -346,12 +359,11 @@ async def run_agent_turn(
                     current_user_message=current_user_message,
                 )
                 traces.extend(execution.trace)
-                if call.name in ORDER_TABLE_SUPPRESSING_TOOLS:
-                    ui_actions = [
-                        action for action in ui_actions
-                        if action.type != "orders_table"
-                    ]
-                ui_actions.extend(execution.ui_actions)
+                ui_actions = _merge_ui_actions(
+                    ui_actions,
+                    execution.ui_actions,
+                    tool_name=call.name,
+                )
                 for source in execution.sources:
                     sources_by_id[source["article_id"]] = source
                 tool_output = execution.output

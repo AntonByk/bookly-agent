@@ -161,6 +161,12 @@ button {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  background: #a39b92;
+  box-shadow: 0 0 0 3px rgba(148, 141, 132, 0.12);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.concierge-pill.verified .status-dot {
   background: var(--success);
   box-shadow: 0 0 0 3px rgba(38, 114, 85, 0.12);
 }

@@ -9,13 +9,16 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 from uuid import uuid4
 
 import httpx
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")
 CheckPredicate = Callable[[dict], bool]
 CheckSpec = tuple[str, str, CheckPredicate]
 
@@ -195,6 +198,39 @@ def grounded_shipping_policy(client: BooklyClient) -> EvalRunResult:
                     "used the supported 1-2 business day estimate",
                     lambda r: "1-2 business days" in r.get("message", "").lower()
                     or "1 to 2 business days" in r.get("message", "").lower(),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
+def general_delivery_overview(client: BooklyClient) -> EvalRunResult:
+    response = client.chat("How long does delivery normally take?")
+    session_id = response["session_id"]
+    try:
+        return evaluate(
+            "general_delivery_overview",
+            response,
+            [
+                (
+                    "judgment",
+                    "searched Bookly knowledge for the broad delivery question",
+                    lambda r: trace_has(r, event_type="tool_call", tool="search_knowledge"),
+                ),
+                (
+                    "judgment",
+                    "used the canonical delivery overview as evidence",
+                    lambda r: "delivery-times" in source_ids(r),
+                ),
+                (
+                    "judgment",
+                    "did not silently reduce a global delivery question to UK-only guidance",
+                    lambda r: (
+                        "europe" in r.get("message", "").lower()
+                        or "destination" in r.get("message", "").lower()
+                        or "international" in r.get("message", "").lower()
+                    ),
                 ),
             ],
         )
@@ -612,6 +648,7 @@ def direct_return_does_not_overclarify(client: BooklyClient) -> EvalRunResult:
 
 SCENARIOS: list[Callable[[BooklyClient], EvalRunResult]] = [
     grounded_shipping_policy,
+    general_delivery_overview,
     near_match_is_not_evidence,
     private_state_requires_auth,
     grounded_order_tracking,
@@ -752,6 +789,36 @@ def _check_totals(summaries: list[EvalSummary], kind: str) -> tuple[int, int]:
     return sum(check.passed for check in checks), len(checks)
 
 
+def report_payload(
+    summaries: list[EvalSummary],
+    *,
+    repeats: int,
+    min_pass_rate: float,
+) -> dict:
+    judgment_passed, judgment_total = _check_totals(summaries, "judgment")
+    guarantee_passed, guarantee_total = _check_totals(summaries, "guarantee")
+    return {
+        "metadata": {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "model": os.getenv("OPENAI_MODEL", "not-set"),
+            "bookly_today": os.getenv("BOOKLY_TODAY", "2026-10-01"),
+            "repeats": repeats,
+            "min_pass_rate": min_pass_rate,
+            "scenario_count": len(summaries),
+            "scenarios_passing_threshold": sum(summary.passed for summary in summaries),
+            "judgment_checks": {
+                "passed": judgment_passed,
+                "total": judgment_total,
+            },
+            "guarantee_checks": {
+                "passed": guarantee_passed,
+                "total": guarantee_total,
+            },
+        },
+        "results": [asdict(summary) for summary in summaries],
+    }
+
+
 def print_report(
     summaries: list[EvalSummary],
     *,
@@ -884,7 +951,14 @@ def main() -> int:
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(
-            json.dumps([asdict(summary) for summary in summaries], indent=2),
+            json.dumps(
+                report_payload(
+                    summaries,
+                    repeats=args.repeats,
+                    min_pass_rate=args.min_pass_rate,
+                ),
+                indent=2,
+            ),
             encoding="utf-8",
         )
         print(f"Saved report to {args.json_out}")

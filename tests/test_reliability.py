@@ -9,6 +9,7 @@ from app.agent.models import TraceEvent, UiAction
 import app.agent.server as agent_server
 from app.agent.server import app as agent_app
 from app.agent.session import Session, sessions
+from app.agent.tools import ToolServiceError
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,
@@ -313,3 +314,27 @@ def test_order_table_persists_for_order_overview_but_is_suppressed_by_specific_r
         tool_name="propose_return",
     )
     assert [action.type for action in return_actions] == ["confirm_action"]
+
+
+def test_general_delivery_overview_and_return_query_rank_correct_articles():
+    client = TestClient(knowledge_app)
+
+    delivery = client.post(
+        "/v1/search",
+        json={"query": "How long does delivery normally take?", "limit": 3},
+    )
+    assert delivery.status_code == 200
+    assert delivery.json()["results"][0]["article_id"] == "delivery-times"
+
+    returns = client.post(
+        "/v1/search",
+        json={"query": "Can I return a book?", "limit": 3},
+    )
+    assert returns.status_code == 200
+    assert returns.json()["results"][0]["article_id"] == "returns"
+
+
+def test_tool_service_error_exposes_stable_code_and_safe_message():
+    error = ToolServiceError("not_found", "The requested Bookly record was not found.")
+    assert error.code == "not_found"
+    assert error.safe_message == "The requested Bookly record was not found."

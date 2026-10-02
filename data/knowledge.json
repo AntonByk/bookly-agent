@@ -1,6 +1,11 @@
 {
   "articles": [
     {
+      "article_id": "delivery-times",
+      "title": "Delivery Times Overview",
+      "content": "Bookly delivery times vary by destination and are measured after dispatch. United Kingdom standard delivery usually takes 3-5 business days and UK express usually takes 1-2 business days. Typical European delivery is 3-6 business days to Ireland, France, Germany, the Netherlands and Belgium; 4-7 business days to Spain, Italy, Portugal, Austria, Denmark, Sweden, Poland and Czechia; and 5-8 business days to Finland. Typical delivery is 6-10 business days to the United States, 7-12 business days to Canada, 8-14 business days to Australia and New Zealand, and 7-12 business days to Singapore and Japan. Delivery estimates are not guarantees. For a specific order, the promised delivery date in Bookly's order system is authoritative."
+    },
+    {
       "article_id": "shipping-delivery",
       "title": "UK Shipping & Delivery",
       "content": "Bookly delivers across the United Kingdom. Standard delivery usually takes 3-5 business days after dispatch. Express delivery usually takes 1-2 business days after dispatch. Delivery estimates are not guarantees and the order's promised delivery date is the authoritative date for a specific order."

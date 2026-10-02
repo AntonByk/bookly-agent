@@ -21,6 +21,14 @@ from app.agent.tools import available_tools, execute_tool
 
 logger = logging.getLogger("bookly.agent")
 
+ORDER_TABLE_SUPPRESSING_TOOLS = {
+    "get_order",
+    "get_tracking",
+    "get_resolution_options",
+    "check_return_eligibility",
+    "propose_return",
+}
+
 
 def _sanitize_customer_text(text: str) -> str:
     """Normalize punctuation that is disallowed in Bookly customer-facing copy."""
@@ -338,6 +346,11 @@ async def run_agent_turn(
                     current_user_message=current_user_message,
                 )
                 traces.extend(execution.trace)
+                if call.name in ORDER_TABLE_SUPPRESSING_TOOLS:
+                    ui_actions = [
+                        action for action in ui_actions
+                        if action.type != "orders_table"
+                    ]
                 ui_actions.extend(execution.ui_actions)
                 for source in execution.sources:
                     sources_by_id[source["article_id"]] = source

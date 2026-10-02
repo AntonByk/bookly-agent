@@ -124,7 +124,7 @@ button {
 .brand {
   font-family: Iowan Old Style, Baskerville, "Times New Roman", serif;
   font-size: 25px;
-  line-height: 1;
+  line-height: 1.25;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -556,6 +556,7 @@ input:disabled {
 
 .card-kicker {
   margin-bottom: 5px;
+  padding-top: 1px;
   color: var(--ink-faint);
   font-size: 10px;
   line-height: 1;
@@ -1169,6 +1170,7 @@ input:disabled {
   }
 
   .order-card {
+    overflow: visible;
     background: transparent;
     border: 0;
     box-shadow: none;
@@ -1246,5 +1248,29 @@ input:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+
+@media (min-width: 1200px) {
+  body.debug-mode .app-shell {
+    width: min(calc(100% - 48px), 1500px);
+    max-width: 1500px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  body.debug-mode .concierge {
+    min-width: 0;
+    min-height: calc(100vh - 82px);
+  }
+
+  body.debug-mode .debug-panel {
+    position: sticky;
+    top: 34px;
+    margin-top: 0;
+    max-height: calc(100vh - 68px);
   }
 }

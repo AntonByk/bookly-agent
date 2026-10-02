@@ -17,7 +17,7 @@ from app.agent.models import ChatResponse, TraceEvent
 from app.agent.prompts import build_system_prompt
 from app.agent.session import Session
 from app.agent.settings import settings
-from app.agent.tools import available_tools, execute_tool
+from app.agent.tools import ToolServiceError, available_tools, execute_tool
 
 logger = logging.getLogger("bookly.agent")
 
@@ -131,9 +131,11 @@ async def _call_model(
                 instructions=build_system_prompt(settings.bookly_today),
                 input=input_items,
                 tools=tools,
-                max_output_tokens=900,
+                max_output_tokens=1500,
             )
-        except (APITimeoutError, APIConnectionError, RateLimitError) as exc:
+        except APITimeoutError:
+            raise
+        except (APIConnectionError, RateLimitError) as exc:
             if attempt == 2:
                 raise
             traces.append(
@@ -238,7 +240,7 @@ async def run_agent_turn(
 
     client = AsyncOpenAI(
         api_key=settings.openai_api_key,
-        timeout=12.0,
+        timeout=30.0,
         max_retries=0,
     )
     input_items: list[Any] = _history_as_input(session)
@@ -367,16 +369,28 @@ async def run_agent_turn(
                 for source in execution.sources:
                     sources_by_id[source["article_id"]] = source
                 tool_output = execution.output
+            except ToolServiceError as exc:
+                traces.append(
+                    TraceEvent(
+                        type="tool_error",
+                        message=f"Tool {call.name} failed safely.",
+                        data={"tool": call.name, "code": exc.code},
+                    )
+                )
+                tool_output = {
+                    "error": exc.code,
+                    "message": exc.safe_message,
+                }
             except Exception as exc:
                 traces.append(
                     TraceEvent(
                         type="tool_error",
                         message=f"Tool {call.name} failed safely.",
-                        data={"tool": call.name, "error": str(exc)},
+                        data={"tool": call.name, "code": "unavailable", "error_type": type(exc).__name__},
                     )
                 )
                 tool_output = {
-                    "error": "tool_unavailable",
+                    "error": "unavailable",
                     "message": "The Bookly service could not complete this request.",
                 }
 

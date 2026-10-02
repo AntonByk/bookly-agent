@@ -101,7 +101,8 @@ The suite contains paired positive and negative behaviors rather than only testi
 
 10. **Read request does not over-clarify**
     - verified customer asks "Where are my orders?";
-    - expects all recent orders to be summarized;
+    - expects all recent orders in the deterministic structured order summary;
+    - expects concise model prose rather than duplicated order rows;
     - expects no unnecessary "which order?" question.
 
 11. **Explicit return does not over-clarify**

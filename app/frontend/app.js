@@ -666,7 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
       authMessage.textContent = `We sent a six-digit code to ${email}.`;
       authEmailStep.hidden = true;
       authCodeStep.hidden = false;
-      authCode.value = data.demo_code || "";
+      authCode.value = "";
       window.setTimeout(() => {
         authCode.focus();
         authCode.select();

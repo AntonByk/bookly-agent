@@ -12,6 +12,7 @@ from services.commerce.server import (
     app as commerce_app,
 )
 from services.identity.server import issue_token
+from services.knowledge.server import app as knowledge_app
 
 
 def test_prompt_contains_pinned_demo_date():
@@ -197,3 +198,35 @@ def test_auth_resume_requires_verified_session():
 
     assert response.status_code == 401
     assert session.pending_intent == "Where is my order?"
+
+
+def test_expanded_knowledge_base_retrieves_country_and_issue_policies():
+    client = TestClient(knowledge_app)
+
+    finland = client.post(
+        "/v1/search",
+        json={"query": "How long does shipping to Finland take?", "limit": 3},
+    )
+    assert finland.status_code == 200
+    assert finland.json()["results"][0]["article_id"] == "international-shipping"
+    assert "5-8 business days" in finland.json()["results"][0]["content"]
+
+    wrong_item = client.post(
+        "/v1/search",
+        json={"query": "I received the wrong book in my parcel", "limit": 3},
+    )
+    assert wrong_item.status_code == 200
+    assert wrong_item.json()["results"][0]["article_id"] == "wrong-missing-item"
+
+
+def test_gift_wrapping_remains_an_intentional_knowledge_gap():
+    client = TestClient(knowledge_app)
+    result = client.post(
+        "/v1/search",
+        json={"query": "Can you gift wrap a book and add a handwritten note?", "limit": 3},
+    )
+    assert result.status_code == 200
+    articles = result.json()["results"]
+    assert articles
+    assert articles[0]["article_id"] == "gift-cards"
+    assert "does not provide information about gift wrapping" in articles[0]["content"]

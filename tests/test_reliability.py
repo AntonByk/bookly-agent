@@ -1,9 +1,12 @@
+import httpx
+
 from fastapi.testclient import TestClient
 
 from app.agent.orchestrator import _handoff_response, _history_as_input, _sanitize_customer_text
 from app.agent.prompts import build_system_prompt
 from app.agent.actions import PendingAction
 from app.agent.models import TraceEvent, UiAction
+import app.agent.server as agent_server
 from app.agent.server import app as agent_app
 from app.agent.session import Session, sessions
 from services.commerce.server import (
@@ -230,3 +233,50 @@ def test_gift_wrapping_remains_an_intentional_knowledge_gap():
     assert articles
     assert articles[0]["article_id"] == "gift-cards"
     assert "does not provide information about gift wrapping" in articles[0]["content"]
+
+
+def test_confirm_service_failure_preserves_pending_action(monkeypatch):
+    class FailingAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, **kwargs):
+            raise httpx.ConnectError(
+                "commerce unavailable",
+                request=httpx.Request("POST", url),
+            )
+
+    session = sessions.get_or_create("confirm-service-failure")
+    session.access_token = issue_token(
+        "CUST-001",
+        ["orders:read", "returns:read", "returns:execute"],
+    )
+    session.customer_id = "CUST-001"
+    session.handed_off = False
+    action = PendingAction(
+        id="ACT-SERVICE-DOWN",
+        order_id="ORD-1002",
+        item_id="ITEM-OTTOLENGHI",
+        reason_category="changed_mind",
+        summary={},
+    )
+    session.pending_actions[action.id] = action
+
+    monkeypatch.setattr(agent_server.httpx, "AsyncClient", FailingAsyncClient)
+
+    client = TestClient(agent_app)
+    response = client.post(
+        f"/api/actions/{action.id}/confirm",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 503
+    assert "No return was created" in response.json()["detail"]
+    assert action.id in session.pending_actions
+    assert not any(event["type"] == "action_result" for event in session.history)

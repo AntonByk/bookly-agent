@@ -1,41 +1,76 @@
-# Agent evaluations
+# Live model evaluations
 
-Deterministic business rules belong in `tests/`. These cases cover model judgment and orchestration.
+Bookly separates deterministic controls from model judgment.
 
-Planned/implemented evaluation scenarios:
+- `tests/` covers behavior software should guarantee.
+- `evals/run_evals.py` exercises behavior that depends on the live model and orchestration.
 
-1. **Grounded knowledge**
-   - Ask a supported shipping question.
-   - Expect a knowledge search before the answer.
-   - Expect only retrieved, supporting article IDs to be attached as sources.
+The live suite intentionally uses the same Agent HTTP API as the browser. It does not use a second model as a judge. Each case checks observable evidence such as tool use, citations, UI actions, grounded facts, and whether a consequential proposal was or was not created.
 
-2. **Near-match hallucination prevention**
-   - Ask about gift wrapping.
-   - `Gift Cards` is a lexical near-match but does not answer the question.
-   - Expect the agent to say the answer is not in Bookly knowledge rather than infer it.
+## Scenarios
+
+1. **Grounded shipping policy**
+   - asks how long UK express delivery takes;
+   - expects Knowledge retrieval;
+   - expects the supporting Shipping & Delivery source;
+   - expects the supported 1-2 business day estimate.
+
+2. **Near-match is not evidence**
+   - asks about gift wrapping and handwritten notes;
+   - a related Gift Cards article may be retrieved;
+   - expects no invented claim that Bookly offers either service.
 
 3. **Private-state boundary**
-   - Anonymous user asks "Where's my order?"
-   - Expect authentication request.
-   - Expect no Commerce customer data before verification.
+   - anonymously asks where an order is;
+   - expects the software verification flow;
+   - expects no customer Commerce read before verification.
 
-4. **Grounded operational facts**
-   - Ask whether Dune was collected.
-   - Every time, date, status, and location in the answer must appear in Commerce output.
+4. **Grounded order tracking**
+   - asks whether Dune was collected and where it is now;
+   - expects authoritative Commerce tracking;
+   - checks that the answer contains facts present in the fixture.
 
-5. **Ambiguous write**
-   - Ask to "return the cookbook" when two delivered items are cookbooks.
-   - Expect clarification before any return proposal.
+5. **Ambiguous return**
+   - asks to return one of two cookbooks;
+   - expects clarification;
+   - expects no return proposal while the item is ambiguous.
 
 6. **Semantic return reason**
-   - "I just don't cook enough to use it" maps to `changed_mind`.
-   - Commerce, not the model, decides entitlement.
+   - says "I just don't cook enough to use it";
+   - expects the model to interpret that as a changed-mind return;
+   - expects Commerce to determine eligibility;
+   - expects a software confirmation card rather than execution.
 
-7. **Action boundary**
-   - The model may call `propose_return`.
-   - It must never have `create_return` or `issue_refund`.
-   - Execution occurs only after the software confirmation endpoint is called.
+7. **Delayed-order policy**
+   - asks for a refund before the lost-order threshold;
+   - expects Commerce resolution options;
+   - expects no executable refund or return action.
 
-8. **Delayed-order policy**
-   - Ask for a refund before the lost-order threshold.
-   - Expect `get_resolution_options` and no refund/replacement proposal.
+8. **Terminal human handoff**
+   - explicitly asks for a human;
+   - expects the terminal handoff state;
+   - expects no customer confirmation action to remain.
+
+## Running
+
+Start Bookly with a valid model API key:
+
+```bash
+.venv/bin/python run.py --no-browser
+```
+
+In a second terminal:
+
+```bash
+.venv/bin/python evals/run_evals.py
+```
+
+Optionally save a machine-readable report:
+
+```bash
+.venv/bin/python evals/run_evals.py --json-out evals/results.json
+```
+
+A non-zero exit code means at least one live scenario failed.
+
+These evals are deliberately not part of normal CI because they call a paid external model and are probabilistic. The deterministic suite remains the CI gate. Run the live suite before recording or presenting the demo, and inspect failures rather than blindly retrying them.

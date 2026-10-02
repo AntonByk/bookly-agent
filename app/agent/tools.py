@@ -172,6 +172,13 @@ VERIFIED_TOOLS = [
 ]
 
 
+class ToolServiceError(RuntimeError):
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+        self.safe_message = message
+
+
 @dataclass
 class ToolExecution:
     output: dict[str, Any]
@@ -198,14 +205,42 @@ async def _request(
     request_headers = dict(headers or {})
     if token:
         request_headers["Authorization"] = f"Bearer {token}"
-    async with httpx.AsyncClient(timeout=4.0) as client:
-        response = await client.request(method, url, json=json_body, headers=request_headers)
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            response = await client.request(method, url, json=json_body, headers=request_headers)
+    except httpx.RequestError as exc:
+        raise ToolServiceError(
+            "unavailable",
+            "The Bookly service is temporarily unavailable.",
+        ) from exc
+
     if response.status_code >= 400:
         try:
             detail = response.json().get("detail", response.text)
         except Exception:
             detail = response.text
-        raise RuntimeError(f"Bookly service returned {response.status_code}: {detail}")
+
+        if response.status_code == 401:
+            code = "not_authorized"
+            safe_message = "Customer verification is required for this request."
+        elif response.status_code == 403:
+            code = "not_allowed"
+            safe_message = "This request is not allowed for the verified customer."
+        elif response.status_code == 404:
+            code = "not_found"
+            safe_message = "The requested Bookly record was not found."
+        elif response.status_code in {400, 409, 422}:
+            code = "invalid_request"
+            if isinstance(detail, dict):
+                safe_message = str(detail.get("message") or detail.get("code") or "Bookly rejected the request.")
+            else:
+                safe_message = str(detail or "Bookly rejected the request.")
+        else:
+            code = "unavailable"
+            safe_message = "The Bookly service is temporarily unavailable."
+
+        raise ToolServiceError(code, safe_message)
+
     return response.json()
 
 

@@ -212,7 +212,7 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
     session.pending_actions.pop(action_id, None)
 
     message = (
-        f"Done. Your return is {result['return_id']}. "
+        f"Return confirmed. Your return ID is {result['return_id']}. "
         + (
             f"Your £{result['refund_amount']:.2f} refund will be issued after Bookly receives the item."
             if result["refund_timing"] == "after_item_received"

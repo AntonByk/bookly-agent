@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.agent.models import ActionConfirmRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse, TraceEvent, UiAction
+from app.agent.models import ActionConfirmRequest, AuthResumeRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse, TraceEvent, UiAction
 from app.agent.orchestrator import handle_message, resume_pending_request
 from app.agent.session import sessions
 from app.agent.settings import settings
@@ -117,20 +117,35 @@ async def auth_verify(request: AuthVerifyRequest) -> dict:
     session.customer_id = result["customer_id"]
     session.scopes = set(result["scopes"])
 
-    pending = session.pending_intent
-    session.pending_intent = None
-
-    resumed: ChatResponse | None = None
-    if pending:
-        resumed = await resume_pending_request(session, pending)
-
     return {
         "verified": True,
         "session_id": session.id,
         "customer_verified": True,
         "scopes": sorted(session.scopes),
-        "resumed_response": resumed.model_dump() if resumed else None,
+        "pending_request": bool(session.pending_intent),
     }
+
+
+@app.post("/api/auth/resume")
+async def auth_resume(request: AuthResumeRequest) -> dict:
+    try:
+        session = sessions.get(request.session_id)
+    except KeyError:
+        raise HTTPException(404, "Unknown session")
+
+    if not session.authenticated:
+        raise HTTPException(401, "Customer is not verified")
+    if session.handed_off:
+        raise HTTPException(409, "Conversation has been handed to human support")
+
+    pending = session.pending_intent
+    session.pending_intent = None
+
+    if not pending:
+        return {"resumed_response": None}
+
+    resumed = await resume_pending_request(session, pending)
+    return {"resumed_response": resumed.model_dump()}
 
 
 @app.post("/api/actions/{action_id}/confirm")

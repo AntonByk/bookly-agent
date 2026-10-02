@@ -24,9 +24,9 @@
         </div>
 
         <div class="header-actions">
-          <div class="concierge-pill">
+          <div id="session-state" class="concierge-pill">
             <span class="status-dot"></span>
-            Concierge
+            <span id="session-state-label">AI Concierge</span>
           </div>
           <button id="new-demo-chat" class="button button-ghost new-chat-button" type="button">
             <span class="button-icon" aria-hidden="true">＋</span>
@@ -87,7 +87,7 @@
         <div class="modal-eyebrow">Secure access</div>
         <h2>Verify your email</h2>
         <p class="modal-copy">
-          To access private order details, enter the email used at checkout.
+          To access private Bookly account and order details, enter the email used at checkout.
         </p>
 
         <label class="field-label" for="auth-email">Email address</label>
@@ -149,7 +149,7 @@
       <div class="modal-eyebrow">Human support</div>
       <h2>A Bookly specialist will take over</h2>
       <p class="modal-copy">
-        In production, the verified customer context, conversation summary, and relevant order details would be passed to a support specialist here.
+        For this demo, the AI stops here. In a live support flow, the specialist would receive this conversation, verified customer context, and relevant order details.
       </p>
       <button id="handoff-new-demo" class="button button-primary button-full" type="button">
         Start a new chat

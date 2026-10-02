@@ -193,10 +193,23 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
                     "reason_category": action.reason_category,
                 },
             )
-    except httpx.RequestError:
+    except httpx.TimeoutException:
+        raise HTTPException(
+            504,
+            (
+                "Bookly couldn't confirm whether the return completed because the order service timed out. "
+                "It is safe to press Confirm again; Bookly will reuse the same request ID."
+            ),
+        )
+    except httpx.ConnectError:
         raise HTTPException(
             503,
             "Bookly couldn't reach the order service. No return was created. Please try again.",
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            503,
+            "Bookly couldn't complete the request because the order service is unavailable. No confirmed result was recorded.",
         )
 
     if response.status_code >= 400:
@@ -238,6 +251,41 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
                 "message": "Commerce re-validated and executed the return using the pending action ID as the idempotency key.",
                 "data": {"return_id": result["return_id"]},
             },
+        ],
+    }
+
+
+@app.post("/api/actions/{action_id}/cancel")
+async def cancel_action(action_id: str, request: ActionConfirmRequest) -> dict:
+    try:
+        session = sessions.get(request.session_id)
+    except KeyError:
+        raise HTTPException(404, "Unknown session")
+
+    action = session.pending_actions.pop(action_id, None)
+    if action is None:
+        raise HTTPException(404, "Unknown or expired pending action")
+
+    result = {
+        "action_id": action_id,
+        "order_id": action.order_id,
+        "item_id": action.item_id,
+        "status": "cancelled",
+    }
+    message = "No problem. I haven't created the return."
+    session.record_action_result("cancel_return_proposal", result)
+    session.record_message("assistant", message)
+
+    return {
+        "cancelled": True,
+        "action_id": action_id,
+        "message": message,
+        "trace": [
+            {
+                "type": "action_cancelled",
+                "message": "Customer cancelled the pending return proposal.",
+                "data": {"action_id": action_id},
+            }
         ],
     }
 

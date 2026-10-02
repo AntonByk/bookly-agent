@@ -18,6 +18,9 @@ TOKEN_NORMALIZATION = {
     "discounts": "discount",
     "codes": "code",
     "items": "item",
+    "take": "time",
+    "takes": "time",
+    "times": "time",
 }
 
 STOPWORDS = {

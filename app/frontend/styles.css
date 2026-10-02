@@ -65,3 +65,6 @@ button.compact { padding: 7px 10px; font-size: 12px; }
   color: white;
   font-weight: 700;
 }
+
+.demo-users { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: #777; }
+.demo-user { padding: 6px 9px; font-size: 12px; }

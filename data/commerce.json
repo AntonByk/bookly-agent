@@ -7,10 +7,24 @@
       "placed_at": "2026-09-22",
       "shipped_at": "2026-09-30",
       "expected_delivery": "2026-10-03",
-      "items": [{"item_id": "ITEM-DUNE", "title": "Dune", "price_gbp": 12.99}],
+      "items": [
+        {
+          "item_id": "ITEM-DUNE",
+          "title": "Dune",
+          "price_gbp": 12.99
+        }
+      ],
       "tracking_events": [
-        {"timestamp": "2026-09-30T18:42:00", "status": "collected", "location": "London Distribution Centre"},
-        {"timestamp": "2026-10-01T06:15:00", "status": "sorting", "location": "Regional Sorting Centre"}
+        {
+          "timestamp": "2026-09-30T18:42:00",
+          "status": "collected",
+          "location": "London Distribution Centre"
+        },
+        {
+          "timestamp": "2026-10-01T06:15:00",
+          "status": "sorting",
+          "location": "Regional Sorting Centre"
+        }
       ]
     },
     {
@@ -20,10 +34,24 @@
       "placed_at": "2026-09-20",
       "delivered_at": "2026-09-28",
       "items": [
-        {"item_id": "ITEM-OTTOLENGHI", "title": "Ottolenghi Simple", "price_gbp": 24.99},
-        {"item_id": "ITEM-WOK", "title": "The Wok", "price_gbp": 21.99}
+        {
+          "item_id": "ITEM-OTTOLENGHI",
+          "title": "Ottolenghi Simple",
+          "price_gbp": 24.99
+        },
+        {
+          "item_id": "ITEM-WOK",
+          "title": "The Wok",
+          "price_gbp": 21.99
+        }
       ],
-      "tracking_events": [{"timestamp": "2026-09-28T14:10:00", "status": "delivered", "location": "Customer address"}]
+      "tracking_events": [
+        {
+          "timestamp": "2026-09-28T14:10:00",
+          "status": "delivered",
+          "location": "Customer address"
+        }
+      ]
     },
     {
       "order_id": "ORD-1003",
@@ -32,8 +60,68 @@
       "placed_at": "2026-09-19",
       "shipped_at": "2026-09-27",
       "expected_delivery": "2026-09-30",
-      "items": [{"item_id": "ITEM-CREATIVE-ACT", "title": "The Creative Act", "price_gbp": 18.99}],
-      "tracking_events": [{"timestamp": "2026-10-01T07:35:00", "status": "delayed", "location": "Carrier network"}]
+      "items": [
+        {
+          "item_id": "ITEM-CREATIVE-ACT",
+          "title": "The Creative Act",
+          "price_gbp": 18.99
+        }
+      ],
+      "tracking_events": [
+        {
+          "timestamp": "2026-10-01T07:35:00",
+          "status": "delayed",
+          "location": "Carrier network"
+        }
+      ]
+    },
+    {
+      "order_id": "ORD-2001",
+      "customer_id": "CUST-002",
+      "status": "delivered",
+      "placed_at": "2026-09-14",
+      "delivered_at": "2026-09-21",
+      "items": [
+        {
+          "item_id": "ITEM-HAIL-MARY",
+          "title": "Project Hail Mary",
+          "price_gbp": 14.99
+        }
+      ],
+      "tracking_events": [
+        {
+          "timestamp": "2026-09-21T11:32:00",
+          "status": "delivered",
+          "location": "Customer address"
+        }
+      ]
+    },
+    {
+      "order_id": "ORD-2002",
+      "customer_id": "CUST-002",
+      "status": "in_transit",
+      "placed_at": "2026-09-26",
+      "shipped_at": "2026-09-30",
+      "expected_delivery": "2026-10-04",
+      "items": [
+        {
+          "item_id": "ITEM-KLARA",
+          "title": "Klara and the Sun",
+          "price_gbp": 11.99
+        }
+      ],
+      "tracking_events": [
+        {
+          "timestamp": "2026-09-30T20:05:00",
+          "status": "collected",
+          "location": "Manchester Distribution Centre"
+        },
+        {
+          "timestamp": "2026-10-01T08:20:00",
+          "status": "in_transit",
+          "location": "National Carrier Network"
+        }
+      ]
     }
   ]
 }

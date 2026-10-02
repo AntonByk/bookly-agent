@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bookly Support</title>
   <link rel="stylesheet" href="/static/styles.css" />
-  <script src="/static/app.js?v=0.4.0" defer></script>
+  <script src="/static/app.js?v=0.4.1" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -62,6 +62,11 @@
       <h3>Verify your email</h3>
       <label>Email used for your order</label>
       <input id="auth-email" type="email" required />
+      <div class="demo-users">
+        <span>Demo customers:</span>
+        <button class="demo-user secondary" type="button" data-email="alex@example.com">Alex</button>
+        <button class="demo-user secondary" type="button" data-email="jamie@example.com">Jamie</button>
+      </div>
       <button id="send-code" type="button">Send code</button>
       <div id="code-area" hidden>
         <p id="auth-message"></p>

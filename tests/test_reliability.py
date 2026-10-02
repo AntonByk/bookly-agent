@@ -92,3 +92,27 @@ def test_prompt_distinguishes_clarification_policy_and_handoff():
     assert "explicitly asks to speak to a human" in prompt
     assert "Do not hand off merely because you need clarification" in prompt
     assert "Commerce denies an action" in prompt
+
+
+def test_customer_order_access_is_scoped_by_identity():
+    client = TestClient(commerce_app)
+    scopes = ["orders:read", "returns:read", "returns:execute"]
+
+    alex_headers = {"Authorization": f"Bearer {issue_token('CUST-001', scopes)}"}
+    jamie_headers = {"Authorization": f"Bearer {issue_token('CUST-002', scopes)}"}
+
+    alex_orders = client.get("/v1/orders", headers=alex_headers)
+    jamie_orders = client.get("/v1/orders", headers=jamie_headers)
+
+    assert alex_orders.status_code == 200
+    assert jamie_orders.status_code == 200
+
+    alex_ids = {order["order_id"] for order in alex_orders.json()["orders"]}
+    jamie_ids = {order["order_id"] for order in jamie_orders.json()["orders"]}
+
+    assert alex_ids == {"ORD-1001", "ORD-1002", "ORD-1003"}
+    assert jamie_ids == {"ORD-2001", "ORD-2002"}
+    assert alex_ids.isdisjoint(jamie_ids)
+
+    assert client.get("/v1/orders/ORD-2001", headers=alex_headers).status_code == 404
+    assert client.get("/v1/orders/ORD-1001", headers=jamie_headers).status_code == 404

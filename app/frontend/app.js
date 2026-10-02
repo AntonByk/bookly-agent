@@ -342,6 +342,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("handoff-new-demo").onclick = startNewDemoChat;
   handoffDialog.addEventListener("cancel", (event) => event.preventDefault());
 
+  for (const button of document.querySelectorAll(".demo-user")) {
+    button.addEventListener("click", () => {
+      document.getElementById("auth-email").value = button.dataset.email;
+      document.getElementById("auth-email").focus();
+    });
+  }
+
   document.getElementById("send-code").onclick = async () => {
     const email = document.getElementById("auth-email").value;
     try {

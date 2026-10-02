@@ -12,7 +12,10 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Bookly Identity API", version="0.2.0")
 SECRET = os.getenv("BOOKLY_MOCK_TOKEN_SECRET", "bookly-local-demo-secret").encode()
-CUSTOMERS = {"alex@example.com": "CUST-001"}
+CUSTOMERS = {
+    "alex@example.com": "CUST-001",
+    "jamie@example.com": "CUST-002",
+}
 CHALLENGES: dict[str, str | None] = {}
 
 

@@ -155,23 +155,28 @@ cp .env.example .env
 .venv/bin/python run.py
 ```
 
-For the customer-facing demo:
-
-```bash
-.venv/bin/python run.py
-```
-
-For the architecture walkthrough / recording:
+For the architecture walkthrough / recording (recommended reviewer view):
 
 ```bash
 .venv/bin/python run.py --debug
 ```
 
-The corresponding URLs are:
+This opens:
+
+```text
+http://127.0.0.1:8000/?debug=1
+```
+
+For the clean customer-facing demo:
+
+```bash
+.venv/bin/python run.py
+```
+
+which opens:
 
 ```text
 http://127.0.0.1:8000/
-http://127.0.0.1:8000/?debug=1
 ```
 
 Using `.venv/bin/python run.py` explicitly is recommended because it guarantees the demo uses the project interpreter even on machines with custom Python tooling.

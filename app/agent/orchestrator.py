@@ -30,14 +30,34 @@ ORDER_TABLE_SUPPRESSING_TOOLS = {
 }
 
 
+def _is_order_overview_request(message: str | None) -> bool:
+    if not message:
+        return False
+
+    normalized = " ".join(message.lower().split())
+    broad_phrases = (
+        "my orders",
+        "recent orders",
+        "order history",
+        "all my orders",
+        "show me my orders",
+        "show my orders",
+        "list my orders",
+        "where are my orders",
+        "what orders do i have",
+    )
+    return any(phrase in normalized for phrase in broad_phrases)
+
+
 def _merge_ui_actions(
     ui_actions: list[Any],
     new_actions: list[Any],
     *,
     tool_name: str,
+    preserve_order_table: bool = False,
 ) -> list[Any]:
     merged = list(ui_actions)
-    if tool_name in ORDER_TABLE_SUPPRESSING_TOOLS:
+    if tool_name in ORDER_TABLE_SUPPRESSING_TOOLS and not preserve_order_table:
         merged = [action for action in merged if action.type != "orders_table"]
     merged.extend(new_actions)
     return merged
@@ -259,6 +279,7 @@ async def run_agent_turn(
     traces: list[TraceEvent] = []
     sources_by_id: dict[str, dict[str, str]] = {}
     ui_actions = []
+    preserve_order_table = _is_order_overview_request(current_user_message)
 
     for iteration in range(1, settings.max_tool_iterations + 1):
         tools = available_tools(session)
@@ -365,6 +386,7 @@ async def run_agent_turn(
                     ui_actions,
                     execution.ui_actions,
                     tool_name=call.name,
+                    preserve_order_table=preserve_order_table,
                 )
                 for source in execution.sources:
                     sources_by_id[source["article_id"]] = source

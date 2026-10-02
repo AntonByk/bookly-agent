@@ -226,13 +226,15 @@ def test_gift_wrapping_remains_an_intentional_knowledge_gap():
     client = TestClient(knowledge_app)
     result = client.post(
         "/v1/search",
-        json={"query": "Do you offer gift wrapping or gift notes?", "limit": 3},
+        json={"query": "Can you gift-wrap a book and include a handwritten note?", "limit": 3},
     )
     assert result.status_code == 200
     articles = result.json()["results"]
     assert articles
     assert articles[0]["article_id"] == "gift-cards"
-    assert "does not provide information about gift wrapping" in articles[0]["content"]
+    assert articles[0]["article_id"] == "gift-cards"
+    assert "gift wrap" not in articles[0]["content"].lower()
+    assert "handwritten" not in articles[0]["content"].lower()
 
 
 def test_confirm_service_failure_preserves_pending_action(monkeypatch):

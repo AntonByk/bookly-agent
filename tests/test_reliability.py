@@ -2,14 +2,13 @@ import httpx
 
 from fastapi.testclient import TestClient
 
-from app.agent.orchestrator import _handoff_response, _history_as_input, _sanitize_customer_text
+from app.agent.orchestrator import _handoff_response, _history_as_input, _merge_ui_actions, _sanitize_customer_text
 from app.agent.prompts import build_system_prompt
 from app.agent.actions import PendingAction
 from app.agent.models import TraceEvent, UiAction
 import app.agent.server as agent_server
 from app.agent.server import app as agent_app
 from app.agent.session import Session, sessions
-from app.agent.tools import _should_render_orders_table
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,
@@ -285,8 +284,32 @@ def test_confirm_service_failure_preserves_pending_action(monkeypatch):
     assert not any(event["type"] == "action_result" for event in session.history)
 
 
-def test_order_table_is_only_rendered_for_broad_order_overviews():
-    assert _should_render_orders_table("Where are my orders?") is True
-    assert _should_render_orders_table("Show me my recent orders") is True
-    assert _should_render_orders_table("Has Dune actually been collected?") is False
-    assert _should_render_orders_table("Can I send one of those cookbooks back?") is False
+def test_order_table_persists_for_order_overview_but_is_suppressed_by_specific_reads():
+    table = UiAction(
+        type="orders_table",
+        label="Recent orders",
+        payload={"orders": [{"order_id": "ORD-1001"}]},
+    )
+
+    overview_actions = _merge_ui_actions([], [table], tool_name="list_orders")
+    assert [action.type for action in overview_actions] == ["orders_table"]
+
+    tracking_actions = _merge_ui_actions(
+        overview_actions,
+        [],
+        tool_name="get_tracking",
+    )
+    assert tracking_actions == []
+
+    return_actions = _merge_ui_actions(
+        overview_actions,
+        [
+            UiAction(
+                type="confirm_action",
+                label="Confirm return",
+                payload={"action_id": "ACT-1"},
+            )
+        ],
+        tool_name="propose_return",
+    )
+    assert [action.type for action in return_actions] == ["confirm_action"]

@@ -51,6 +51,11 @@ def healthcheck(port: int, timeout: float = 20.0) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the Bookly agent demo locally.")
     parser.add_argument("--no-browser", action="store_true", help="Do not open the browser automatically.")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Open the two-pane architecture walkthrough view with the agent trace.",
+    )
     args = parser.parse_args()
 
     missing = dependency_check()
@@ -117,7 +122,8 @@ def main() -> int:
             stop_all()
         print(f"ok {name:<10} http://127.0.0.1:{port}")
 
-    url = f"http://127.0.0.1:{services[-1][2]}"
+    base_url = f"http://127.0.0.1:{services[-1][2]}"
+    url = f"{base_url}/?debug=1" if args.debug else base_url
     print(f"\nBookly is ready: {url}")
     print("Press Ctrl+C to stop all services.")
     if not args.no_browser:

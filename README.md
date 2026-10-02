@@ -34,7 +34,7 @@ The mocked services represent meaningful trust and authority boundaries:
 
 - **Identity** verifies the customer and issues a signed customer-scoped token.
 - **Commerce** owns orders, tracking, return eligibility, delayed-order resolution policy, ownership checks, idempotency, duplicate-return protection, and transaction execution.
-- **Knowledge** exposes a 20-article Bookly help centre covering delivery, returns, damaged/wrong items, pre-orders, payments and common account questions.
+- **Knowledge** exposes a 21-article Bookly help centre covering delivery, returns, damaged/wrong items, pre-orders, payments and common account questions.
 - **Agent application** owns session state, the direct LLM tool loop, two-tier capability disclosure, pending actions, confirmation, human handoff, and the browser UI.
 
 The model never receives the customer access token. It calls application tools, and those tools call Bookly services.
@@ -101,11 +101,19 @@ The final demo UI is intentionally customer-facing rather than an engineering co
 - polished help-centre citations, loading states and human-handoff modal;
 - no agent trace in the default experience.
 
-For architecture discussion, append `?debug=1` to the local URL to reveal the observable application trace without changing the customer experience:
+For the architecture walkthrough / recording, run:
+
+```bash
+.venv/bin/python run.py --debug
+```
+
+This opens the intentional two-pane recording view at:
 
 ```text
 http://127.0.0.1:8000/?debug=1
 ```
+
+On wide screens the customer experience and chronological observable trace sit side by side. The normal `/` URL remains the clean customer-facing experience.
 
 ## Demo data
 
@@ -147,10 +155,23 @@ cp .env.example .env
 .venv/bin/python run.py
 ```
 
-Bookly opens at:
+For the customer-facing demo:
+
+```bash
+.venv/bin/python run.py
+```
+
+For the architecture walkthrough / recording:
+
+```bash
+.venv/bin/python run.py --debug
+```
+
+The corresponding URLs are:
 
 ```text
-http://127.0.0.1:8000
+http://127.0.0.1:8000/
+http://127.0.0.1:8000/?debug=1
 ```
 
 Using `.venv/bin/python run.py` explicitly is recommended because it guarantees the demo uses the project interpreter even on machines with custom Python tooling.
@@ -225,13 +246,24 @@ By default, every scenario runs three times and must pass all three. The suite i
 
 The live suite is intentionally not a normal CI gate because it calls a paid external model and is probabilistic.
 
+## Evaluation evidence
+
+The evaluator can write a submission-ready JSON evidence report containing the UTC timestamp, configured model, pinned Bookly date, repeat count, threshold, aggregate judgment/guarantee scores and every scenario run:
+
+```bash
+.venv/bin/python evals/run_evals.py --json-out evals/evidence-2026-10-02.json
+```
+
+Do not substitute example scores for measured results. The final deck should use the actual numbers from the committed evidence report, including any failures.
+
 ## Failure behavior
 
 The prototype fails closed around consequential actions.
 
-- transient model failures are retried once, then no action is taken;
+- model timeouts fail without an automatic retry; connection errors, rate limits and provider 5xx errors are retried once;
 - unavailable Identity does not grant account access;
-- unavailable Commerce does not consume the pending action or record a successful transaction;
+- a Commerce connection failure preserves the pending action and reports that no return was created;
+- a Commerce timeout is treated as an unknown outcome, preserves the pending action, and explicitly allows an idempotent Confirm retry;
 - duplicate execution attempts are protected by idempotency;
 - a second return for the same active item is blocked independently of the idempotency key;
 - a handed-off session cannot execute stale AI actions.

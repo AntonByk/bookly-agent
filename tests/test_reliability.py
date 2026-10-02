@@ -223,7 +223,7 @@ def test_gift_wrapping_remains_an_intentional_knowledge_gap():
     client = TestClient(knowledge_app)
     result = client.post(
         "/v1/search",
-        json={"query": "Can you gift wrap a book and add a handwritten note?", "limit": 3},
+        json={"query": "Do you offer gift wrapping or gift notes?", "limit": 3},
     )
     assert result.status_code == 200
     articles = result.json()["results"]

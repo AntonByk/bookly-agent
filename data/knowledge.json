@@ -48,7 +48,7 @@
     {
       "article_id": "returns",
       "title": "Returns & Refunds",
-      "content": "Eligible changed-mind returns are accepted within 30 days of delivery. Changed-mind refunds are issued to the original payment method after Bookly receives the returned item. Return eligibility for a specific item is confirmed by Bookly's order system."
+      "content": "Eligible changed-mind returns are accepted within 30 days of delivery. Changed-mind refunds are issued to the original payment method after Bookly receives the returned item. Return eligibility for a specific item is confirmed by Bookly's order system. Once Bookly issues a refund, banks and card providers can take 3-7 business days to show the credit."
     },
     {
       "article_id": "return-condition",
@@ -64,11 +64,6 @@
       "article_id": "wrong-missing-item",
       "title": "Wrong or Missing Item in a Delivery",
       "content": "If a parcel contains the wrong book or an item is missing, do not submit a changed-mind return for the incorrect item. Contact Bookly customer care so the order contents can be reviewed and the correct resolution arranged."
-    },
-    {
-      "article_id": "refund-timing",
-      "title": "Refund Timing",
-      "content": "Once Bookly issues a refund, it is sent to the original payment method. Banks and card providers can take 3-7 business days to show the credit. Changed-mind refunds are issued after the returned item is received. Approved damaged-item refunds may be issued earlier."
     },
     {
       "article_id": "preorders",

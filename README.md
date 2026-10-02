@@ -199,13 +199,13 @@ The CI gate covers software guarantees including:
 Live model behavior:
 
 ```bash
-# Bookly must already be running with a valid API key
+# Requires a valid OPENAI_API_KEY. The evaluator launches a fresh isolated Bookly stack.
 .venv/bin/python evals/run_evals.py
 ```
 
-The live suite covers grounded policy, unsupported near-matches, the authentication boundary, operational grounding, ambiguity, semantic reason mapping, delayed-order policy and human handoff. See `evals/README.md`.
+By default, every scenario runs three times and must pass all three. The suite includes paired positive/negative behaviors, strict grounding checks, fresh in-memory state, and separate reporting for model-judgment checks versus deterministic software guarantees. See `evals/README.md`.
 
-The live suite is intentionally not a CI gate because it calls a paid external model and is probabilistic.
+The live suite is intentionally not a normal CI gate because it calls a paid external model and is probabilistic.
 
 ## Failure behavior
 

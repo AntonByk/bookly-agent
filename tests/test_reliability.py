@@ -43,7 +43,7 @@ def test_structured_history_preserves_tool_and_confirmed_action_results():
     assert "ORD-1001" in model_input[1]["content"]
     assert "Authoritative Bookly tool result" in model_input[1]["content"]
     assert "RET-1001" in model_input[2]["content"]
-    assert "customer-confirmed application action" in model_input[2]["content"]
+    assert "customer-triggered application action" in model_input[2]["content"]
 
 
 def test_commerce_blocks_duplicate_return_with_different_idempotency_key():
@@ -232,7 +232,6 @@ def test_gift_wrapping_remains_an_intentional_knowledge_gap():
     assert result.status_code == 200
     articles = result.json()["results"]
     assert articles
-    assert articles[0]["article_id"] == "gift-cards"
     assert articles[0]["article_id"] == "gift-cards"
     assert "gift wrap" not in articles[0]["content"].lower()
     assert "handwritten" not in articles[0]["content"].lower()

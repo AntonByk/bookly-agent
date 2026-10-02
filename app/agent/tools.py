@@ -339,6 +339,23 @@ async def execute_tool(
             f"{settings.commerce_base_url}/v1/orders",
             token=session.access_token,
         )
+        return ToolExecution(
+            output=result,
+            ui_actions=[
+                UiAction(
+                    type="orders_table",
+                    label="Recent orders",
+                    payload={"orders": result.get("orders", [])},
+                )
+            ],
+            trace=[
+                TraceEvent(
+                    type="tool_call",
+                    message="Called Bookly list_orders.",
+                    data={"tool": name, "arguments": arguments},
+                )
+            ],
+        )
     elif name == "get_order":
         result = await _request(
             "GET",

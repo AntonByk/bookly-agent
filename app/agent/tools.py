@@ -402,7 +402,12 @@ async def execute_tool(
                 TraceEvent(
                     type="action_proposed",
                     message="Model proposed a return; software created a pending action awaiting explicit confirmation.",
-                    data={"action_id": action.id},
+                    data={
+                        "action_id": action.id,
+                        "order_id": arguments["order_id"],
+                        "item_id": arguments["item_id"],
+                        "reason_category": arguments["reason_category"],
+                    },
                 )
             ],
         )

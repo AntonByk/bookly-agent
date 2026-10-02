@@ -124,7 +124,7 @@ button {
 .brand {
   font-family: Iowan Old Style, Baskerville, "Times New Roman", serif;
   font-size: 25px;
-  line-height: 1.25;
+  line-height: 1;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -556,10 +556,10 @@ input:disabled {
 
 .card-kicker {
   margin-bottom: 5px;
-  padding-top: 1px;
+  padding-top: 2px;
   color: var(--ink-faint);
   font-size: 10px;
-  line-height: 1;
+  line-height: 1.25;
   font-weight: 760;
   letter-spacing: .1em;
   text-transform: uppercase;

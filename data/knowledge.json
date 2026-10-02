@@ -1,9 +1,109 @@
 {
   "articles": [
-    {"article_id": "shipping-delivery", "title": "Shipping & Delivery", "content": "Standard delivery usually takes 3–5 business days. Express delivery usually takes 1–2 business days."},
-    {"article_id": "international-shipping", "title": "International Shipping", "content": "Bookly ships to Finland. International delivery to Finland typically takes 5–8 business days."},
-    {"article_id": "returns", "title": "Returns & Refunds", "content": "Changed-mind returns are accepted within 30 days of delivery when eligible. Refunds for changed-mind returns are issued to the original payment method after Bookly receives the item."},
-    {"article_id": "gift-cards", "title": "Gift Cards", "content": "Bookly gift cards can be purchased online, redeemed at checkout, and checked for remaining balance."},
-    {"article_id": "contact-us", "title": "Contact Us", "content": "For questions not covered by the Help Centre, use the Contact Us form at /contact to reach the customer care team."}
+    {
+      "article_id": "uk-shipping-delivery",
+      "title": "UK Shipping & Delivery",
+      "content": "Bookly delivers across the United Kingdom. Standard delivery usually takes 3-5 business days after dispatch. Express delivery usually takes 1-2 business days after dispatch. Delivery estimates are not guarantees and the order's promised delivery date is the authoritative date for a specific order."
+    },
+    {
+      "article_id": "europe-shipping",
+      "title": "European Shipping",
+      "content": "Bookly ships to Ireland, France, Germany, the Netherlands, Belgium, Spain, Italy, Portugal, Austria, Denmark, Sweden, Finland, Poland and Czechia. Typical delivery after dispatch is 3-6 business days to Ireland, France, Germany, the Netherlands and Belgium; 4-7 business days to Spain, Italy, Portugal, Austria, Denmark, Sweden, Poland and Czechia; and 5-8 business days to Finland."
+    },
+    {
+      "article_id": "north-america-shipping",
+      "title": "United States & Canada Shipping",
+      "content": "Bookly ships to the United States and Canada. Typical delivery after dispatch is 6-10 business days to the United States and 7-12 business days to Canada. Remote areas can take longer."
+    },
+    {
+      "article_id": "international-shipping-other",
+      "title": "Other International Shipping",
+      "content": "Bookly currently ships to Australia, New Zealand, Singapore and Japan. Typical delivery after dispatch is 8-14 business days to Australia and New Zealand, and 7-12 business days to Singapore and Japan. Bookly does not currently ship to countries that are not listed in the Help Centre."
+    },
+    {
+      "article_id": "customs-duties",
+      "title": "Customs, Duties & Import Taxes",
+      "content": "International orders may be subject to customs duties, import taxes or local handling fees charged by the destination country. These charges are not included in Bookly's product or shipping price and are normally the recipient's responsibility."
+    },
+    {
+      "article_id": "tracking-orders",
+      "title": "Tracking Your Order",
+      "content": "When tracking is available, Bookly sends a dispatch confirmation with tracking details. Carrier scans can take up to 24 hours after dispatch to appear. For a specific order, the latest tracking events shown by Bookly's order system are authoritative."
+    },
+    {
+      "article_id": "delayed-missing-orders",
+      "title": "Delayed & Missing Orders",
+      "content": "A parcel is not considered lost until 3 business days have passed after its promised delivery date. Before that threshold, Bookly can provide the latest tracking status but a lost-order refund or replacement is not yet available. Once the threshold is reached, available resolution options depend on the order and are confirmed by Bookly's order system."
+    },
+    {
+      "article_id": "delivery-address",
+      "title": "Changing a Delivery Address",
+      "content": "A delivery address can only be changed before an order enters fulfilment. Once an order is being prepared or has shipped, Bookly cannot guarantee an address change. If the order has already shipped, carrier options may vary and customer care can review the case."
+    },
+    {
+      "article_id": "cancel-order",
+      "title": "Cancelling an Order",
+      "content": "Orders can usually be cancelled before they enter fulfilment. Once an order is being prepared for dispatch or has shipped, cancellation may no longer be possible. If cancellation is unavailable, eligible items can be returned after delivery under the normal returns policy."
+    },
+    {
+      "article_id": "returns-refunds",
+      "title": "Returns & Refunds",
+      "content": "Eligible changed-mind returns are accepted within 30 days of delivery. Changed-mind refunds are issued to the original payment method after Bookly receives the returned item. Return eligibility for a specific item is confirmed by Bookly's order system."
+    },
+    {
+      "article_id": "return-condition",
+      "title": "Return Condition",
+      "content": "Changed-mind returns should be sent back in resaleable condition with no significant damage, writing, highlighting or missing components. Normal inspection from opening a book is acceptable. Bookly may reduce or refuse a refund if an item is returned materially damaged by the customer."
+    },
+    {
+      "article_id": "damaged-defective",
+      "title": "Damaged or Defective Books",
+      "content": "If a book arrives damaged or defective, report the issue within 30 days of delivery. Bookly may offer a refund or replacement after the issue is reviewed. For approved damaged-item refunds, the item may not need to be returned and the refund can be approved immediately."
+    },
+    {
+      "article_id": "wrong-missing-item",
+      "title": "Wrong or Missing Item in a Delivery",
+      "content": "If a parcel contains the wrong book or an item is missing, do not submit a changed-mind return for the incorrect item. Contact Bookly customer care so the order contents can be reviewed and the correct resolution arranged."
+    },
+    {
+      "article_id": "refund-timing",
+      "title": "Refund Timing",
+      "content": "Once Bookly issues a refund, it is sent to the original payment method. Banks and card providers can take 3-7 business days to show the credit. Changed-mind refunds are issued after the returned item is received. Approved damaged-item refunds may be issued earlier."
+    },
+    {
+      "article_id": "preorders",
+      "title": "Pre-orders",
+      "content": "Pre-order release dates are supplied by publishers and can change. Bookly dispatches pre-orders when stock becomes available for release. If an order contains both pre-order and in-stock titles, items may ship separately. Payment and cancellation options can depend on whether fulfilment has started."
+    },
+    {
+      "article_id": "backorders-stock",
+      "title": "Backorders & Out-of-stock Titles",
+      "content": "Some temporarily unavailable books can be placed on backorder. Estimated restock dates are estimates and can change if a publisher or distributor is delayed. Bookly will not substitute a different edition without the customer's agreement."
+    },
+    {
+      "article_id": "payments",
+      "title": "Payments",
+      "content": "Bookly accepts major debit and credit cards and supported digital wallets shown at checkout. Payment authorization can fail because of bank declines, expired cards, billing-address mismatches or fraud checks. Bookly customer care cannot override a bank decline."
+    },
+    {
+      "article_id": "promo-codes",
+      "title": "Promo Codes & Discounts",
+      "content": "Only one promo code can be applied to an order unless the offer explicitly says otherwise. Promo codes must be valid at checkout and cannot normally be added after an order has been placed. Some publisher-restricted, pre-order or already-discounted titles may be excluded."
+    },
+    {
+      "article_id": "gift-cards",
+      "title": "Gift Cards",
+      "content": "Bookly gift cards can be purchased online, redeemed at checkout and checked for remaining balance. Gift cards are not exchangeable for cash except where required by law. This article does not provide information about gift wrapping, gift notes or packaging options."
+    },
+    {
+      "article_id": "account-password",
+      "title": "Account & Password Help",
+      "content": "Customers who cannot sign in should use the password reset option on the Bookly sign-in page. Password reset links are sent to the account email address and expire after a limited time. Customer care cannot view or disclose a customer's password."
+    },
+    {
+      "article_id": "contact-us",
+      "title": "Contact Bookly Customer Care",
+      "content": "For issues that cannot be resolved through the Help Centre or available self-service tools, Bookly customer care can review the case. Use the Contact Us form at /contact or ask the Bookly support agent to hand the conversation to a human specialist."
+    }
   ]
 }

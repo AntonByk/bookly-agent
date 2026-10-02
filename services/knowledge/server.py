@@ -8,6 +8,13 @@ from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[2]
 ARTICLES = json.loads((ROOT / "data" / "knowledge.json").read_text())["articles"]
+
+STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "book", "bookly", "but", "by",
+    "can", "do", "does", "for", "from", "how", "i", "in", "is", "it", "me",
+    "my", "of", "on", "or", "please", "the", "to", "what", "when", "where",
+    "which", "with", "you", "your",
+}
 app = FastAPI(title="Bookly Knowledge API", version="0.1.0")
 
 
@@ -17,7 +24,11 @@ class SearchRequest(BaseModel):
 
 
 def tokens(text: str) -> set[str]:
-    return set(re.findall(r"[a-z0-9]+", text.lower()))
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]+", text.lower())
+        if token not in STOPWORDS
+    }
 
 
 @app.get("/health")
@@ -30,9 +41,22 @@ async def search(request: SearchRequest) -> dict:
     q = tokens(request.query)
     ranked = []
     for article in ARTICLES:
-        haystack = tokens(f"{article['title']} {article['content']}")
-        score = len(q & haystack)
+        title_tokens = tokens(article["title"])
+        content_tokens = tokens(article["content"])
+        title_overlap = len(q & title_tokens)
+        body_overlap = len(q & content_tokens)
+        score = (title_overlap * 3) + body_overlap
         if score:
-            ranked.append((score, article))
-    ranked.sort(key=lambda pair: pair[0], reverse=True)
-    return {"results": [{"article_id": a["article_id"], "title": a["title"], "content": a["content"], "score": score} for score, a in ranked[: request.limit]]}
+            ranked.append((score, title_overlap, article))
+    ranked.sort(key=lambda pair: (pair[0], pair[1]), reverse=True)
+    return {
+        "results": [
+            {
+                "article_id": article["article_id"],
+                "title": article["title"],
+                "content": article["content"],
+                "score": score,
+            }
+            for score, _title_overlap, article in ranked[: request.limit]
+        ]
+    }

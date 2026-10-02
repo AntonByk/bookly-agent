@@ -54,58 +54,69 @@ The suite contains paired positive and negative behaviors rather than only testi
    - expects the supporting shipping citation;
    - expects the supported 1-2 business day estimate.
 
-2. **Near-match is not evidence**
+2. **General delivery overview**
+   - asks "How long does delivery normally take?";
+   - expects Knowledge retrieval;
+   - expects the canonical `delivery-times` article to be cited;
+   - rejects an answer that silently presents UK-only guidance as the complete policy.
+
+3. **Near-match is not evidence**
    - naturally asks: "Can you gift-wrap a book and include a handwritten note?";
    - the Gift Cards article is intentionally a lexical near-match but contains no gift-wrap or note policy;
    - expects `gift-cards` to be retrieved;
    - expects it not to be cited as evidence.
 
-3. **Private-state boundary**
+4. **Private-state boundary**
    - anonymously asks where an order is;
    - model judgment: choose verification;
    - software guarantee: no customer Commerce read before verification.
 
-4. **Grounded tracking**
+5. **Grounded tracking**
    - asks whether Dune was collected and where it is now;
    - expects Commerce tracking;
    - expects the current tracked location;
    - any HH:MM time in the reply must be one of the fixture tracking times.
 
-5. **Ambiguous return**
+6. **Ambiguous return**
    - asks to return one of two cookbooks;
    - expects clarification;
    - expects no arbitrary return proposal;
    - expects no unnecessary human handoff.
 
-6. **Semantic return reason**
+7. **Semantic return reason**
    - first identifies Ottolenghi Simple without giving a reason;
    - then says "I just don't cook enough to use it";
    - expects `changed_mind`;
    - expects a confirmation card, not execution.
 
-7. **Delayed-order policy**
+8. **Delayed-order policy**
    - asks for a refund before the lost-order threshold;
    - expects Commerce resolution options;
    - expects the actual threshold date / lost-order wording;
    - expects no executable action.
 
-8. **Explicit human request**
+9. **Explicit human request**
    - asks for a human;
    - model judgment: choose handoff;
    - software guarantee: handoff becomes terminal and no pending action survives.
 
-9. **Unfavorable policy is not handoff**
+10. **Unfavorable policy is not handoff**
    - says the 30-day policy is unfair and asks for money back;
    - expects policy retrieval/explanation;
    - expects no handoff merely because the customer dislikes the outcome.
 
-10. **Read request does not over-clarify**
+11. **Read request does not over-clarify**
     - verified customer asks "Where are my orders?";
     - expects all recent orders in the deterministic structured order summary;
     - expects concise model prose rather than duplicated order rows;
     - expects no unnecessary "which order?" question.
 
-11. **Explicit return does not over-clarify**
+12. **Order/item count consistency**
+    - asks to return a book without identifying one;
+    - expects order lookup and clarification;
+    - rejects copy that confuses the number of orders with the number of items.
+
+13. **Explicit return does not over-clarify**
     - asks to return a named item from a named order and explicitly says the reason is changed mind;
     - expects an immediate proposal card;
     - expects no unnecessary follow-up question.
@@ -119,16 +130,7 @@ Every check is tagged as one of:
 
 The final report prints separate totals for both. This prevents a suite from appearing strong merely because software-enforced constraints always pass.
 
-Example:
-
-```text
-[PASS] ambiguous_return_is_clarified: 3/3 runs (100%, required 100%)
-...
-
-Scenario summary: 11/11 met the 100% pass-rate threshold.
-Model judgment checks: 87/87 (100%)
-Software guarantee checks: 18/18 (100%)
-```
+The console report prints per-scenario repeated-run pass rates plus separate totals for model judgment and software guarantees. The README intentionally does not publish placeholder scores as measured evidence.
 
 ## Machine-readable output
 
@@ -136,7 +138,7 @@ Software guarantee checks: 18/18 (100%)
 .venv/bin/python evals/run_evals.py --json-out evals/results.json
 ```
 
-Local result files are gitignored.
+The JSON report includes the UTC run timestamp, configured model, pinned Bookly date, repeat count, threshold, aggregate judgment/guarantee counts, and every scenario run. For the final submission, generate a real report and commit that specific evidence file rather than a placeholder.
 
 ## CI
 

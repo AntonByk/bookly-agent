@@ -3,79 +3,158 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bookly Support</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <script src="/static/app.js?v=0.4.4" defer></script>
+  <meta name="theme-color" content="#f4f0e8" />
+  <title>Bookly Concierge</title>
+  <link rel="stylesheet" href="/static/styles.css?v=1.0.0" />
+  <script src="/static/app.js?v=1.0.0" defer></script>
 </head>
 <body>
-  <main class="shell">
-    <section class="chat-card">
-      <header>
-        <div>
-          <div class="brand">Bookly</div>
-          <div class="subtitle">Customer support</div>
+  <main class="app-shell">
+    <section class="concierge">
+      <header class="app-header">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </div>
+          <div>
+            <div class="brand">Bookly</div>
+            <div class="brand-subtitle">AI Concierge</div>
+          </div>
         </div>
+
         <div class="header-actions">
-          <div id="services" class="services">Checking services…</div>
-          <button id="new-demo-chat" class="secondary compact" type="button">New demo chat</button>
+          <div class="concierge-pill">
+            <span class="status-dot"></span>
+            Concierge
+          </div>
+          <button id="new-demo-chat" class="button button-ghost new-chat-button" type="button">
+            <span class="button-icon" aria-hidden="true">＋</span>
+            <span>Start new chat</span>
+          </button>
         </div>
       </header>
 
-      <div id="messages" class="messages">
-        <div class="message assistant">Hi, how can I help with your Bookly order today?</div>
+      <section class="conversation">
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <div id="actions" class="actions"></div>
+      </section>
+
+      <div class="composer-shell">
+        <form id="chat-form" class="composer">
+          <input
+            id="chat-input"
+            autocomplete="off"
+            placeholder="Ask about orders, delivery, returns, or Bookly policies"
+            aria-label="Message Bookly"
+          />
+          <button id="send-message" class="send-button" type="submit" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+            </svg>
+          </button>
+        </form>
+        <div class="composer-note">Bookly can help with orders, policies, returns, and support questions.</div>
       </div>
-
-      <div id="actions" class="actions"></div>
-
-      <form id="chat-form" class="composer">
-        <input id="chat-input" autocomplete="off" placeholder="Ask Bookly…" />
-        <button id="send-message" type="submit">Send</button>
-      </form>
     </section>
 
-    <aside class="trace-card">
-      <h2>Agent trace</h2>
-      <p>
-        Observable application events: model calls, tool use, auth boundaries, and actions.
-        Private model reasoning is intentionally not exposed.
-      </p>
+    <aside id="debug-panel" class="debug-panel" hidden>
+      <div class="debug-header">
+        <div>
+          <div class="debug-title">Agent trace</div>
+          <div id="services" class="services">Checking services...</div>
+        </div>
+        <span class="debug-badge">Debug</span>
+      </div>
+      <p>Observable application events only. Private model reasoning is never exposed.</p>
       <div id="trace"></div>
     </aside>
   </main>
 
-  <dialog id="handoff-dialog" class="handoff-dialog">
-    <div class="handoff-content">
-      <div class="handoff-icon" aria-hidden="true">✓</div>
-      <h3>Human handoff complete</h3>
-      <p>
-        A Bookly support specialist would take over this conversation here, with the context collected so far.
-      </p>
-      <p class="handoff-note">
-        Thanks for trying the demo. Start a new demo chat to explore another use case.
-      </p>
-      <button id="handoff-new-demo" type="button">Start new demo chat</button>
+  <dialog id="auth-dialog" class="modal auth-modal">
+    <div class="modal-card">
+      <button id="auth-close" class="modal-close" type="button" aria-label="Close verification">×</button>
+
+      <div class="modal-icon auth-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 10V8a5 5 0 0 1 10 0v2" />
+          <rect x="5" y="10" width="14" height="10" rx="3" />
+          <path d="M12 14v2" />
+        </svg>
+      </div>
+
+      <div id="auth-step-email" class="auth-step">
+        <div class="modal-eyebrow">Secure access</div>
+        <h2>Verify your email</h2>
+        <p class="modal-copy">
+          To access private order details, enter the email used at checkout.
+        </p>
+
+        <label class="field-label" for="auth-email">Email address</label>
+        <input id="auth-email" class="field-input" type="email" autocomplete="email" placeholder="you@example.com" />
+
+        <div class="demo-picker">
+          <span class="demo-picker-label">Demo customers</span>
+          <div class="demo-picker-buttons">
+            <button class="demo-user chip-button" type="button" data-email="alex@example.com">Alex</button>
+            <button class="demo-user chip-button" type="button" data-email="jamie@example.com">Jamie</button>
+          </div>
+        </div>
+
+        <div id="auth-email-error" class="inline-error" hidden></div>
+
+        <button id="send-code" class="button button-primary button-full" type="button">
+          Send verification code
+        </button>
+      </div>
+
+      <div id="auth-step-code" class="auth-step" hidden>
+        <div class="modal-eyebrow">One more step</div>
+        <h2>Enter your code</h2>
+        <p class="modal-copy" id="auth-message">
+          We sent a six-digit verification code.
+        </p>
+
+        <label class="field-label" for="auth-code">Verification code</label>
+        <input
+          id="auth-code"
+          class="field-input code-input"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="123456"
+        />
+
+        <div class="demo-code">Demo code: <strong>123456</strong></div>
+        <div id="auth-code-error" class="inline-error" hidden></div>
+
+        <button id="verify-code" class="button button-primary button-full" type="button">
+          Verify and continue
+        </button>
+        <button id="auth-back" class="button button-text button-full" type="button">
+          Use a different email
+        </button>
+      </div>
     </div>
   </dialog>
 
-  <dialog id="auth-dialog">
-    <form method="dialog" id="auth-form">
-      <h3>Verify your email</h3>
-      <label>Email used for your order</label>
-      <input id="auth-email" type="email" required />
-      <div class="demo-users">
-        <span>Demo customers:</span>
-        <button class="demo-user secondary" type="button" data-email="alex@example.com">Alex</button>
-        <button class="demo-user secondary" type="button" data-email="jamie@example.com">Jamie</button>
+  <dialog id="handoff-dialog" class="modal handoff-dialog">
+    <div class="modal-card handoff-card">
+      <div class="modal-icon handoff-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M8 12h8M12 8v8" />
+          <circle cx="12" cy="12" r="9" />
+        </svg>
       </div>
-      <button id="send-code" type="button">Send code</button>
-      <div id="code-area" hidden>
-        <p id="auth-message"></p>
-        <label>Verification code</label>
-        <input id="auth-code" inputmode="numeric" placeholder="Demo: 123456" />
-        <button id="verify-code" type="button">Verify</button>
-      </div>
-      <button class="secondary" type="button" onclick="document.getElementById('auth-dialog').close()">Cancel</button>
-    </form>
+      <div class="modal-eyebrow">Human support</div>
+      <h2>A Bookly specialist will take over</h2>
+      <p class="modal-copy">
+        In production, the verified customer context, conversation summary, and relevant order details would be passed to a support specialist here.
+      </p>
+      <button id="handoff-new-demo" class="button button-primary button-full" type="button">
+        Start a new chat
+      </button>
+    </div>
   </dialog>
 </body>
 </html>

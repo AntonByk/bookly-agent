@@ -376,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const originalLabel = verifyButton.textContent;
     verifyButton.disabled = true;
     verifyButton.textContent = "Verifying…";
+
     try {
       const data = await apiFetch("/api/auth/verify", {
         method: "POST",
@@ -389,18 +390,36 @@ document.addEventListener("DOMContentLoaded", () => {
           type: "verification_completed",
           message: "Identity verified the customer; the scoped token remains server-side.",
           data: {scopes: data.scopes}
-        },
-        {
-          type: "pending_intent_resumed",
-          message: data.resumed_response
-            ? "The application resumed the original customer request automatically."
-            : "No pending request to resume.",
-          data: {}
         }
       ]);
 
-      if (data.resumed_response) {
-        renderAgentResponse(data.resumed_response);
+      if (data.pending_request) {
+        showThinking("Verified. Resuming your request");
+        try {
+          const resumed = await apiFetch("/api/auth/resume", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({session_id: sessionId})
+          });
+
+          addTrace([
+            {
+              type: "pending_intent_resumed",
+              message: resumed.resumed_response
+                ? "The application resumed the original customer request automatically."
+                : "No pending request to resume.",
+              data: {}
+            }
+          ]);
+
+          if (resumed.resumed_response) {
+            renderAgentResponse(resumed.resumed_response);
+          }
+        } catch (error) {
+          showRequestFailure("request resume", error);
+        } finally {
+          hideThinking();
+        }
       }
     } catch (error) {
       document.getElementById("auth-message").textContent = String(error);

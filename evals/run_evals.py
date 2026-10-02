@@ -289,6 +289,14 @@ def run_evals(client: BooklyClient) -> list[EvalResult]:
                     lambda r: "confirm_action" in action_types(r),
                 ),
                 (
+                    "model mapped the free-form reason to changed_mind",
+                    lambda r: any(
+                        event.get("type") == "action_proposed"
+                        and event.get("data", {}).get("reason_category") == "changed_mind"
+                        for event in r.get("trace", [])
+                    ),
+                ),
+                (
                     "return remained pending customer confirmation",
                     lambda r: trace_has(r, event_type="action_proposed"),
                 ),

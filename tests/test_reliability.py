@@ -338,3 +338,79 @@ def test_tool_service_error_exposes_stable_code_and_safe_message():
     error = ToolServiceError("not_found", "The requested Bookly record was not found.")
     assert error.code == "not_found"
     assert error.safe_message == "The requested Bookly record was not found."
+
+
+def test_confirm_timeout_preserves_pending_action_and_reports_unknown_outcome(monkeypatch):
+    class TimingOutAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, **kwargs):
+            raise httpx.ReadTimeout(
+                "commerce response timed out",
+                request=httpx.Request("POST", url),
+            )
+
+    session = sessions.get_or_create("confirm-timeout-unknown")
+    session.access_token = issue_token(
+        "CUST-001",
+        ["orders:read", "returns:read", "returns:execute"],
+    )
+    session.customer_id = "CUST-001"
+    session.handed_off = False
+    action = PendingAction(
+        id="ACT-TIMEOUT",
+        order_id="ORD-1002",
+        item_id="ITEM-OTTOLENGHI",
+        reason_category="changed_mind",
+        summary={},
+    )
+    session.pending_actions[action.id] = action
+
+    monkeypatch.setattr(agent_server.httpx, "AsyncClient", TimingOutAsyncClient)
+
+    client = TestClient(agent_app)
+    response = client.post(
+        f"/api/actions/{action.id}/confirm",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 504
+    assert "couldn't confirm whether the return completed" in response.json()["detail"]
+    assert "safe to press Confirm again" in response.json()["detail"]
+    assert action.id in session.pending_actions
+    assert not any(event["type"] == "action_result" for event in session.history)
+
+
+def test_cancel_endpoint_removes_pending_action_and_records_cancellation():
+    session = sessions.get_or_create("cancel-pending-return")
+    session.handed_off = False
+    action = PendingAction(
+        id="ACT-CANCEL",
+        order_id="ORD-1002",
+        item_id="ITEM-WOK",
+        reason_category="changed_mind",
+        summary={},
+    )
+    session.pending_actions[action.id] = action
+
+    client = TestClient(agent_app)
+    response = client.post(
+        f"/api/actions/{action.id}/cancel",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["cancelled"] is True
+    assert action.id not in session.pending_actions
+    assert any(
+        event["type"] == "action_result"
+        and event["action"] == "cancel_return_proposal"
+        for event in session.history
+    )

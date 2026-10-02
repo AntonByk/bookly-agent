@@ -1,7 +1,9 @@
 from evals.run_evals import (
+    EvalSummary,
     action_types,
     evaluate,
     order_ids_from_ui,
+    report_payload,
     retrieved_article_ids,
     source_ids,
     times_in,
@@ -80,3 +82,39 @@ def test_eval_rejects_unknown_check_kind():
         assert "Unknown eval check kind" in str(exc)
     else:
         raise AssertionError("Expected evaluate() to reject an unknown check kind")
+
+
+def test_report_payload_contains_evidence_metadata(monkeypatch):
+    monkeypatch.setenv("OPENAI_MODEL", "gpt-test")
+    monkeypatch.setenv("BOOKLY_TODAY", "2026-10-01")
+    result = evaluate(
+        "example",
+        {"message": "ok"},
+        [
+            ("judgment", "semantic behavior", lambda _r: True),
+            ("guarantee", "software boundary", lambda _r: True),
+        ],
+    )
+
+    payload = report_payload(
+        [
+            EvalSummary(
+                name="example",
+                passed=True,
+                passed_runs=3,
+                total_runs=3,
+                pass_rate=1.0,
+                runs=[result, result, result],
+            )
+        ],
+        repeats=3,
+        min_pass_rate=1.0,
+    )
+
+    assert payload["metadata"]["model"] == "gpt-test"
+    assert payload["metadata"]["bookly_today"] == "2026-10-01"
+    assert payload["metadata"]["repeats"] == 3
+    assert payload["metadata"]["scenario_count"] == 1
+    assert payload["metadata"]["judgment_checks"] == {"passed": 3, "total": 3}
+    assert payload["metadata"]["guarantee_checks"] == {"passed": 3, "total": 3}
+    assert payload["results"][0]["name"] == "example"

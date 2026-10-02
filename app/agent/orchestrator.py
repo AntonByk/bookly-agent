@@ -68,7 +68,7 @@ def _history_as_input(session: Session) -> list[dict[str, str]]:
                 {
                     "role": "developer",
                     "content": (
-                        f"A customer-confirmed application action ({event['action']}) executed outside the model. "
+                        f"A customer-triggered application action ({event['action']}) was applied outside the model. "
                         "Treat this result as authoritative:\n"
                         f"{json.dumps(event['result'], separators=(',', ':'))}"
                     ),

@@ -30,7 +30,8 @@ PUBLIC_TOOLS = [
         "description": (
             "Request customer email verification when the customer's request requires private order or account state. "
             "If the same message also asks about or challenges a public Bookly policy, search and answer that policy first, "
-            "then request verification for the customer-specific check."
+            "then request verification for the customer-specific check. "
+            "This tool is the only supported way to start verification; never ask the customer to verify only in prose."
         ),
         "parameters": {
             "type": "object",

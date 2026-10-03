@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections import defaultdict, deque
 from pathlib import Path
+import time
 
 import httpx
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent.models import ActionConfirmRequest, AuthResumeRequest, AuthStartRequest, AuthVerifyRequest, ChatRequest, ChatResponse, TraceEvent, UiAction
@@ -15,13 +17,64 @@ from app.agent.settings import settings
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = ROOT / "app" / "frontend"
 
-app = FastAPI(title="Bookly Agent", version="0.3.0")
+app = FastAPI(title="Bookly Agent", version="0.4.0")
 app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
+
+RATE_LIMIT_BUCKETS: dict[str, deque[float]] = defaultdict(deque)
+RATE_LIMITED_PREFIXES = (
+    "/api/chat",
+    "/api/auth/",
+    "/api/actions/",
+)
+
+
+def _request_ip(request: Request) -> str:
+    return request.headers.get("x-real-ip") or (
+        request.client.host if request.client else "unknown"
+    )
+
+
+@app.middleware("http")
+async def public_demo_rate_limit(request: Request, call_next):
+    if settings.public_demo and request.url.path.startswith(RATE_LIMITED_PREFIXES):
+        now = time.monotonic()
+        key = _request_ip(request)
+        bucket = RATE_LIMIT_BUCKETS[key]
+        cutoff = now - settings.demo_rate_limit_window_seconds
+
+        while bucket and bucket[0] < cutoff:
+            bucket.popleft()
+
+        if len(bucket) >= settings.demo_rate_limit_requests:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "detail": (
+                        "This shared Bookly demo has reached its temporary request limit. "
+                        "Please try again in a few minutes."
+                    )
+                },
+                headers={"Retry-After": str(settings.demo_rate_limit_window_seconds)},
+            )
+
+        bucket.append(now)
+
+    return await call_next(request)
 
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "agent", "model_configured": bool(settings.openai_api_key)}
+    return {
+        "status": "ok",
+        "service": "agent",
+        "model_configured": bool(settings.openai_api_key),
+        "public_demo": settings.public_demo,
+    }
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots() -> str:
+    return "User-agent: *\nDisallow: /\n"
 
 
 @app.get("/api/services")
@@ -73,8 +126,20 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 @app.delete("/api/session/{session_id}")
 async def reset_session(session_id: str) -> dict:
+    commerce_reset = False
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.delete(
+                f"{settings.commerce_base_url}/v1/demo/sessions/{session_id}"
+            )
+            commerce_reset = response.status_code == 200
+    except httpx.RequestError:
+        # The next browser conversation receives a new session namespace anyway.
+        # Cleanup is best-effort and must not prevent a fresh demo chat.
+        commerce_reset = False
+
     sessions.delete(session_id)
-    return {"reset": True}
+    return {"reset": True, "commerce_reset": commerce_reset}
 
 
 @app.post("/api/auth/start")
@@ -186,6 +251,7 @@ async def confirm_action(action_id: str, request: ActionConfirmRequest) -> dict:
                 headers={
                     "Authorization": f"Bearer {session.access_token}",
                     "Idempotency-Key": action.id,
+                    "X-Demo-Session-ID": session.id,
                 },
                 json={
                     "order_id": action.order_id,

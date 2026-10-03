@@ -685,3 +685,15 @@ def test_prompt_never_reverifies_when_customer_tools_are_available():
 def test_mixed_policy_request_prompt_contract():
     prompt = build_system_prompt("2026-10-01")
     assert "search and answer the public policy portion first" in prompt
+
+
+def test_verification_requires_auth_tool_contract():
+    prompt = build_system_prompt("2026-10-01")
+    assert "request_authentication is the only way to start customer verification" in prompt
+    assert "Never merely tell the customer to verify in prose" in prompt
+
+    auth_tool = next(
+        tool for tool in PUBLIC_TOOLS
+        if tool["name"] == "request_authentication"
+    )
+    assert "only supported way to start verification" in auth_tool["description"]

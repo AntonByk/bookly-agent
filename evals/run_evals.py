@@ -261,6 +261,11 @@ def near_match_is_not_evidence(client: BooklyClient) -> EvalRunResult:
                     "did not cite the near-match Gift Cards article as evidence",
                     lambda r: "gift-cards" not in source_ids(r),
                 ),
+                (
+                    "judgment",
+                    "did not terminally hand off a low-risk unanswered factual question",
+                    lambda r: "human_handoff" not in action_types(r),
+                ),
             ],
         )
     finally:
@@ -545,6 +550,19 @@ def verified_orders_are_summarized(client: BooklyClient) -> EvalRunResult:
                     "did not hand off a straightforward read request",
                     lambda r: "human_handoff" not in action_types(r),
                 ),
+                (
+                    "judgment",
+                    "did not duplicate the structured order card in prose",
+                    lambda r: sum(
+                        title in r.get("message", "").lower()
+                        for title in (
+                            "dune",
+                            "ottolenghi simple",
+                            "the wok",
+                            "the creative act",
+                        )
+                    ) <= 1,
+                ),
             ],
         )
     finally:
@@ -583,6 +601,30 @@ def return_item_count_is_consistent(client: BooklyClient) -> EvalRunResult:
                         and "three orders" in message
                         and "four" not in message
                         and "4 " not in message
+                    ),
+                ),
+                (
+                    "judgment",
+                    "offered only delivered items as current return choices",
+                    lambda r: (
+                        "ottolenghi simple" in r.get("message", "").lower()
+                        and "the wok" in r.get("message", "").lower()
+                        and (
+                            (
+                                "dune" not in r.get("message", "").lower()
+                                and "the creative act" not in r.get("message", "").lower()
+                            )
+                            or any(
+                                phrase in r.get("message", "").lower()
+                                for phrase in (
+                                    "still on the way",
+                                    "not delivered",
+                                    "not been delivered",
+                                    "haven't arrived",
+                                    "have not arrived",
+                                )
+                            )
+                        )
                     ),
                 ),
                 (

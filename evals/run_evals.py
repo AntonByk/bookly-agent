@@ -337,6 +337,15 @@ def grounded_order_tracking(client: BooklyClient) -> EvalRunResult:
                     "every HH:MM time in the reply is present in Commerce tracking",
                     lambda r: times_in(r.get("message", "")).issubset(allowed_times),
                 ),
+                (
+                    "judgment",
+                    "did not ask an already-verified customer to verify again",
+                    lambda r: (
+                        "verify_email" not in action_types(r)
+                        and not trace_has(r, event_type="auth_required")
+                        and "verify" not in r.get("message", "").lower()
+                    ),
+                ),
             ],
         )
     finally:
@@ -455,6 +464,15 @@ def delayed_order_policy(client: BooklyClient) -> EvalRunResult:
                         "october 5" in r.get("message", "").lower()
                         or "2026-10-05" in r.get("message", "").lower()
                         or "not considered lost until" in r.get("message", "").lower()
+                    ),
+                ),
+                (
+                    "judgment",
+                    "did not ask an already-verified customer to verify again",
+                    lambda r: (
+                        "verify_email" not in action_types(r)
+                        and not trace_has(r, event_type="auth_required")
+                        and "verify" not in r.get("message", "").lower()
                     ),
                 ),
                 (
@@ -650,6 +668,62 @@ def return_item_count_is_consistent(client: BooklyClient) -> EvalRunResult:
         _safe_reset(client, session_id)
 
 
+def verified_jamie_return_journey(client: BooklyClient) -> EvalRunResult:
+    session_id = client.verified_session("jamie@example.com")
+    orders = client.chat("Where are my orders?", session_id)
+    response = client.chat(
+        "I want to return Project Hail Mary. I've changed my mind.",
+        session_id,
+    )
+    try:
+        return evaluate(
+            "verified_jamie_return_journey",
+            response,
+            [
+                (
+                    "judgment",
+                    "the verified session could read Jamie's orders without re-verification",
+                    lambda _r: (
+                        trace_has(orders, event_type="tool_call", tool="list_orders")
+                        and "verify_email" not in action_types(orders)
+                        and "verify" not in orders.get("message", "").lower()
+                    ),
+                ),
+                (
+                    "judgment",
+                    "the same verified session did not ask for verification again on return",
+                    lambda r: (
+                        "verify_email" not in action_types(r)
+                        and not trace_has(r, event_type="auth_required")
+                        and "verify" not in r.get("message", "").lower()
+                    ),
+                ),
+                (
+                    "judgment",
+                    "proposed the requested Project Hail Mary changed-mind return",
+                    lambda r: (
+                        "confirm_action" in action_types(r)
+                        and any(
+                            event.get("type") == "action_proposed"
+                            and event.get("data", {}).get("reason_category") == "changed_mind"
+                            for event in r.get("trace", [])
+                        )
+                    ),
+                ),
+                (
+                    "guarantee",
+                    "the return remained pending until explicit confirmation",
+                    lambda r: not any(
+                        event.get("type") == "action_executed"
+                        for event in r.get("trace", [])
+                    ),
+                ),
+            ],
+        )
+    finally:
+        _safe_reset(client, session_id)
+
+
 def direct_return_does_not_overclarify(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
@@ -707,6 +781,7 @@ SCENARIOS: list[Callable[[BooklyClient], EvalRunResult]] = [
     unfavorable_policy_is_not_handoff,
     verified_orders_are_summarized,
     return_item_count_is_consistent,
+    verified_jamie_return_journey,
     direct_return_does_not_overclarify,
 ]
 

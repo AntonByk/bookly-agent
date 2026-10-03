@@ -18,9 +18,12 @@ from uuid import uuid4
 import httpx
 from dotenv import load_dotenv
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from app.agent.prompts import build_system_prompt
 
-ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 CheckPredicate = Callable[[dict], bool]
 CheckSpec = tuple[str, str, CheckPredicate]

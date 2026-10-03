@@ -10,7 +10,7 @@ import app.agent.server as agent_server
 from app.agent.server import RATE_LIMIT_BUCKETS, app as agent_app
 from app.agent.settings import settings
 from app.agent.session import Session, sessions
-from app.agent.tools import ToolServiceError
+from app.agent.tools import PUBLIC_TOOLS, ToolServiceError
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,
@@ -631,3 +631,29 @@ def test_confirm_propagates_demo_session_namespace(monkeypatch):
     assert response.status_code == 200
     assert captured["headers"]["X-Demo-Session-ID"] == session.id
     assert captured["headers"]["Idempotency-Key"] == action.id
+
+
+def test_low_risk_knowledge_gap_requires_customer_opt_in_before_handoff():
+    prompt = build_system_prompt("2026-10-01")
+    assert "Do not automatically hand off low-risk knowledge gaps" in prompt
+    assert "Do not call request_human_handoff unless the customer asks for or accepts that handoff" in prompt
+
+    handoff_tool = next(
+        tool for tool in PUBLIC_TOOLS
+        if tool["name"] == "request_human_handoff"
+    )
+    description = handoff_tool["description"]
+    assert "explicitly accepts an offer of human help" in description
+    assert "do not call this tool unless the customer asks for or accepts the handoff" in description
+
+
+def test_prompt_filters_undelivered_items_from_return_clarification():
+    prompt = build_system_prompt("2026-10-01")
+    assert "offer only items from orders that are already delivered" in prompt
+    assert "Do not present in-transit or delayed-undelivered items as return choices" in prompt
+
+
+def test_prompt_keeps_order_overview_prose_short_when_card_is_rendered():
+    prompt = build_system_prompt("2026-10-01")
+    assert "Keep your accompanying prose to one short sentence" in prompt
+    assert "do not repeat order rows or item titles from the card" in prompt

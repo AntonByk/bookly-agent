@@ -317,7 +317,7 @@ The evaluator can write a submission-ready JSON evidence report containing the U
 .venv/bin/python evals/run_evals.py --json-out evals/evidence-2026-10-02.json
 ```
 
-Do not substitute example scores for measured results. The final deck should use the actual numbers from the committed evidence report, including any failures. With the default 13 scenarios x 3 repeats, describe a clean run as **39 sampled conversations with no failed checks**, alongside the exact check totals. Do not describe three repetitions as proof of "100% reliability."
+Do not substitute example scores for measured results. The final deck should use the actual numbers from the committed evidence report, including any failures. With the default 14 scenarios x 3 repeats, describe a clean run as **39 sampled conversations with no failed checks**, alongside the exact check totals. Do not describe three repetitions as proof of "100% reliability."
 
 ## Failure behavior
 

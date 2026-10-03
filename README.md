@@ -311,13 +311,13 @@ The live suite is intentionally not a normal CI gate because it calls a paid ext
 
 ## Evaluation evidence
 
-The evaluator can write a submission-ready JSON evidence report containing the UTC timestamp, configured model, pinned Bookly date, repeat count, threshold, aggregate judgment/guarantee scores and every scenario run:
+The evaluator can write a submission-ready JSON evidence report containing the UTC timestamp, configured model, pinned Bookly date, Git commit SHA, dirty-working-tree flag, rendered-prompt SHA-256, repeat count, threshold, aggregate judgment/guarantee scores and every scenario run:
 
 ```bash
 .venv/bin/python evals/run_evals.py --json-out evals/evidence-2026-10-02.json
 ```
 
-Do not substitute example scores for measured results. The final deck should use the actual numbers from the committed evidence report, including any failures.
+Do not substitute example scores for measured results. The final deck should use the actual numbers from the committed evidence report, including any failures. With the default 13 scenarios x 3 repeats, describe a clean run as **39 sampled conversations with no failed checks**, alongside the exact check totals. Do not describe three repetitions as proof of "100% reliability."
 
 ## Failure behavior
 

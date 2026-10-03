@@ -680,3 +680,8 @@ def test_prompt_never_reverifies_when_customer_tools_are_available():
     prompt = build_system_prompt("2026-10-01")
     assert "customer is already verified" in prompt
     assert "Never ask them to verify again in that session" in prompt
+
+
+def test_mixed_policy_request_prompt_contract():
+    prompt = build_system_prompt("2026-10-01")
+    assert "search and answer the public policy portion first" in prompt

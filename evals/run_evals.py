@@ -18,6 +18,8 @@ from uuid import uuid4
 import httpx
 from dotenv import load_dotenv
 
+from app.agent.prompts import build_system_prompt
+
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 CheckPredicate = Callable[[dict], bool]

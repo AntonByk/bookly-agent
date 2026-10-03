@@ -834,6 +834,36 @@ def _check_totals(summaries: list[EvalSummary], kind: str) -> tuple[int, int]:
     return sum(check.passed for check in checks), len(checks)
 
 
+def _git_commit_sha() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unavailable"
+
+
+def _git_dirty() -> bool | None:
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--porcelain"],
+            cwd=ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        return bool(status)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _prompt_sha256(bookly_today: str) -> str:
+    rendered = build_system_prompt(bookly_today)
+    return hashlib.sha256(rendered.encode("utf-8")).hexdigest()
+
+
 def report_payload(
     summaries: list[EvalSummary],
     *,

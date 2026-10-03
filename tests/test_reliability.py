@@ -657,3 +657,26 @@ def test_prompt_keeps_order_overview_prose_short_when_card_is_rendered():
     prompt = build_system_prompt("2026-10-01")
     assert "Keep your accompanying prose to one short sentence" in prompt
     assert "do not repeat order rows or item titles from the card" in prompt
+
+
+def test_authentication_tool_disappears_after_verification():
+    guest = Session(id="guest-capabilities")
+    guest_names = {tool["name"] for tool in available_tools(guest)}
+    assert "request_authentication" in guest_names
+    assert "list_orders" not in guest_names
+
+    verified = Session(
+        id="verified-capabilities",
+        access_token="demo-token",
+        customer_id="CUST-001",
+    )
+    verified_names = {tool["name"] for tool in available_tools(verified)}
+    assert "request_authentication" not in verified_names
+    assert "list_orders" in verified_names
+    assert "propose_return" in verified_names
+
+
+def test_prompt_never_reverifies_when_customer_tools_are_available():
+    prompt = build_system_prompt("2026-10-01")
+    assert "customer is already verified" in prompt
+    assert "Never ask them to verify again in that session" in prompt

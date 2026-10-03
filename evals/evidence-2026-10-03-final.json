@@ -1,0 +1,1223 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-10-03T08:34:48.020910+00:00",
+    "model": "gpt-5.6-luna",
+    "bookly_today": "2026-10-01",
+    "git_commit_sha": "9c170cc230e43427252c7a306ce3503c054a1791",
+    "git_dirty": false,
+    "prompt_sha256": "12abf950bb6f06b301eee30e7be48bc609528f6cd7332e1619fea580b1b727f9",
+    "repeats": 3,
+    "min_pass_rate": 1.0,
+    "scenario_count": 14,
+    "scenarios_passing_threshold": 14,
+    "judgment_checks": {
+      "passed": 135,
+      "total": 135
+    },
+    "guarantee_checks": {
+      "passed": 21,
+      "total": 21
+    }
+  },
+  "results": [
+    {
+      "name": "grounded_shipping_policy",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "grounded_shipping_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge before answering policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "cited the supporting shipping article",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the supported 1-2 business day estimate",
+              "passed": true
+            }
+          ],
+          "response": "UK express delivery usually takes **1-2 business days after dispatch**. This is an estimate, not a guarantee; for a specific order, the promised delivery date is the authoritative one."
+        },
+        {
+          "name": "grounded_shipping_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge before answering policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "cited the supporting shipping article",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the supported 1-2 business day estimate",
+              "passed": true
+            }
+          ],
+          "response": "UK express delivery usually takes **1-2 business days after dispatch**. This is an estimate, not a guarantee; for a specific order, the promised delivery date is authoritative."
+        },
+        {
+          "name": "grounded_shipping_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge before answering policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "cited the supporting shipping article",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the supported 1-2 business day estimate",
+              "passed": true
+            }
+          ],
+          "response": "UK express delivery usually takes **1-2 business days after dispatch**. This is an estimate, not a guarantee, and the promised delivery date for a specific order is authoritative."
+        }
+      ]
+    },
+    {
+      "name": "general_delivery_overview",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "general_delivery_overview",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge for the broad delivery question",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the canonical delivery overview as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not silently reduce a global delivery question to UK-only guidance",
+              "passed": true
+            }
+          ],
+          "response": "Delivery times are measured **after dispatch** and vary by destination:\n\n- **UK standard:** 3-5 business days\n- **UK express:** 1-2 business days\n- **Europe:** typically 3-8 business days, depending on the country\n- **United States:** 6-10 business days\n- **Canada:** 7-12 business days\n- **Australia and New Zealand:** 8-14 business days\n- **Singapore and Japan:** 7-12 business days\n\nThese are estimates, not guarantees. For a specific order, the promised delivery date shown in Bookly is the authoritative estimate."
+        },
+        {
+          "name": "general_delivery_overview",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge for the broad delivery question",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the canonical delivery overview as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not silently reduce a global delivery question to UK-only guidance",
+              "passed": true
+            }
+          ],
+          "response": "Delivery times vary by destination and are counted **after dispatch**:\n\n- **UK standard:** 3-5 business days\n- **UK express:** 1-2 business days\n- **Europe:** typically 3-8 business days, depending on country\n- **United States:** 6-10 business days\n- **Canada:** 7-12 business days\n- **Australia and New Zealand:** 8-14 business days\n- **Singapore and Japan:** 7-12 business days\n\nThese are estimates, not guarantees. For a specific order, the promised delivery date shown in Bookly is the authoritative estimate."
+        },
+        {
+          "name": "general_delivery_overview",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge for the broad delivery question",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "used the canonical delivery overview as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not silently reduce a global delivery question to UK-only guidance",
+              "passed": true
+            }
+          ],
+          "response": "Delivery times vary by destination and are counted **after dispatch**:\n\n- **UK:** Standard 3-5 business days, express 1-2 business days\n- **Europe:** Usually 3-8 business days, depending on the country\n- **US:** 6-10 business days\n- **Canada:** 7-12 business days\n- **Australia and New Zealand:** 8-14 business days\n- **Singapore and Japan:** 7-12 business days\n\nThese are estimates, not guarantees. For a specific order, the promised delivery date shown for that order is the authoritative estimate."
+        }
+      ]
+    },
+    {
+      "name": "near_match_is_not_evidence",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "near_match_is_not_evidence",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the Gift Cards article was actually retrieved as a near-match",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not cite the near-match Gift Cards article as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not terminally hand off a low-risk unanswered factual question",
+              "passed": true
+            }
+          ],
+          "response": "I couldn\u2019t confirm from Bookly\u2019s available information whether gift wrapping or handwritten notes are offered. If you\u2019d like, I can connect you with a support specialist to check."
+        },
+        {
+          "name": "near_match_is_not_evidence",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the Gift Cards article was actually retrieved as a near-match",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not cite the near-match Gift Cards article as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not terminally hand off a low-risk unanswered factual question",
+              "passed": true
+            }
+          ],
+          "response": "Bookly\u2019s available information doesn\u2019t confirm whether gift-wrapping or handwritten notes are available. You could add a gift card, but gift-wrap and note options may depend on the seller or checkout."
+        },
+        {
+          "name": "near_match_is_not_evidence",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "searched Bookly knowledge",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the Gift Cards article was actually retrieved as a near-match",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not cite the near-match Gift Cards article as evidence",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not terminally hand off a low-risk unanswered factual question",
+              "passed": true
+            }
+          ],
+          "response": "Bookly\u2019s available information doesn\u2019t confirm whether gift-wrapping or handwritten notes are available. Gift cards can be purchased for eligible books, but gift-wrap and note options aren\u2019t listed."
+        }
+      ]
+    },
+    {
+      "name": "private_state_requires_auth",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "private_state_requires_auth",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose the verification path for private order state",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer Commerce read occurred before verification",
+              "passed": true
+            }
+          ],
+          "response": "Please verify your account so I can check your order status and tracking details."
+        },
+        {
+          "name": "private_state_requires_auth",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose the verification path for private order state",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer Commerce read occurred before verification",
+              "passed": true
+            }
+          ],
+          "response": "Please complete the email verification prompt so I can check your order\u2019s latest status and tracking details."
+        },
+        {
+          "name": "private_state_requires_auth",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose the verification path for private order state",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer Commerce read occurred before verification",
+              "passed": true
+            }
+          ],
+          "response": "Please verify your email address so I can securely check your order status and tracking details."
+        }
+      ]
+    },
+    {
+      "name": "grounded_order_tracking",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "grounded_order_tracking",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "reported the current tracked location",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "every HH:MM time in the reply is present in Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not invent an incorrect relative collection date",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            }
+          ],
+          "response": "Yes, **Dune has been collected**. The latest tracking shows it is currently **being sorted at the Regional Sorting Centre**.\n\nIt was collected at the **London Distribution Centre on 30 September at 18:42**, and the latest update was **1 October at 06:15**."
+        },
+        {
+          "name": "grounded_order_tracking",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "reported the current tracked location",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "every HH:MM time in the reply is present in Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not invent an incorrect relative collection date",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            }
+          ],
+          "response": "Yes, **Dune has been collected**. The latest tracking shows:\n\n- **Collected:** 30 September 2026 at 18:42, London Distribution Centre\n- **Latest location:** Regional Sorting Centre, sorting as of 1 October 2026 at 06:15\n\nIt\u2019s currently in transit, with expected delivery on **3 October 2026**."
+        },
+        {
+          "name": "grounded_order_tracking",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "reported the current tracked location",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "every HH:MM time in the reply is present in Commerce tracking",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not invent an incorrect relative collection date",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            }
+          ],
+          "response": "Yes, **Dune has been collected**. The latest tracking event shows it was at the **Regional Sorting Centre** on **2026-10-01 at 06:15**, after being collected at the **London Distribution Centre** on **2026-09-30 at 18:42**."
+        }
+      ]
+    },
+    {
+      "name": "ambiguous_return_is_clarified",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "ambiguous_return_is_clarified",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not choose an item and create a proposal while ambiguous",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "asked the customer to distinguish the two cookbooks",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not unnecessarily hand off an ambiguity the model can resolve",
+              "passed": true
+            }
+          ],
+          "response": "Yes, I can check that for you. Which delivered cookbook would you like to return: **Ottolenghi Simple** or **The Wok**? Also, is the reason that you changed your mind or that it arrived damaged?"
+        },
+        {
+          "name": "ambiguous_return_is_clarified",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not choose an item and create a proposal while ambiguous",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "asked the customer to distinguish the two cookbooks",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not unnecessarily hand off an ambiguity the model can resolve",
+              "passed": true
+            }
+          ],
+          "response": "Which cookbook would you like to return: **Ottolenghi Simple** or **The Wok**?"
+        },
+        {
+          "name": "ambiguous_return_is_clarified",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not choose an item and create a proposal while ambiguous",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "asked the customer to distinguish the two cookbooks",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not unnecessarily hand off an ambiguity the model can resolve",
+              "passed": true
+            }
+          ],
+          "response": "Yes, I can check that for you. Which cookbook would you like to return: **Ottolenghi Simple** or **The Wok**? Also, is it because you changed your mind or because it arrived damaged?"
+        }
+      ]
+    },
+    {
+      "name": "semantic_return_reason",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "semantic_return_reason",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not invent a reason before the customer supplied one",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "mapped the free-form reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "created a software confirmation card",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "proposal remained pending instead of executing the return",
+              "passed": true
+            }
+          ],
+          "response": "**Ottolenghi Simple** is eligible for a changed-mind return until **October 28, 2026**. The refund will be **\u00a324.99** to your original payment method after Bookly receives the book, using a prepaid return label.\n\nPlease review and confirm the return in the action card. Return it in resaleable condition, without significant damage, writing, or highlighting."
+        },
+        {
+          "name": "semantic_return_reason",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not invent a reason before the customer supplied one",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "mapped the free-form reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "created a software confirmation card",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "proposal remained pending instead of executing the return",
+              "passed": true
+            }
+          ],
+          "response": "That qualifies as a **changed-mind return**. I\u2019ve prepared the return for **Ottolenghi Simple**:\n\n- Refund: **\u00a324.99** to your original payment method\n- Return shipping: **Prepaid label**\n- Refund timing: **After the book is received**\n- Return by: **28 October 2026**\n\nPlease review and confirm the return in the action card."
+        },
+        {
+          "name": "semantic_return_reason",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not invent a reason before the customer supplied one",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "mapped the free-form reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "created a software confirmation card",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "proposal remained pending instead of executing the return",
+              "passed": true
+            }
+          ],
+          "response": "**Ottolenghi Simple** is eligible for return as a changed-mind return.\n\nYou\u2019ll receive a **\u00a324.99 refund** to your original payment method after the book is received. Return shipping is covered with a prepaid label, and the return must be started by **October 28, 2026**.\n\nPlease review and confirm the return in the action card."
+        }
+      ]
+    },
+    {
+      "name": "delayed_order_policy",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "delayed_order_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "checked Commerce resolution options",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "communicated the authoritative lost-order threshold",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no executable refund or return action was produced",
+              "passed": true
+            }
+          ],
+          "response": "I can see why you expected **The Creative Act** by September 30. Bookly shows it was delayed in the carrier network on **October 1, 2026 at 07:35**, and it has not been delivered.\n\nA refund cannot be issued yet because the order is not considered lost until **October 5, 2026**. If it still hasn\u2019t arrived then, come back here and I can check the available resolution options."
+        },
+        {
+          "name": "delayed_order_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "checked Commerce resolution options",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "communicated the authoritative lost-order threshold",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no executable refund or return action was produced",
+              "passed": true
+            }
+          ],
+          "response": "I can see why you expected it by now. Bookly shows **The Creative Act** was due on **September 30** and is currently delayed in the carrier network, with a tracking update at **2026-10-01 07:35**.\n\nA refund isn\u2019t available yet because the order is considered lost only from **October 5**. If it still hasn\u2019t arrived then, come back here and I can check the available resolution options."
+        },
+        {
+          "name": "delayed_order_policy",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "checked Commerce resolution options",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "communicated the authoritative lost-order threshold",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an already-verified customer to verify again",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no executable refund or return action was produced",
+              "passed": true
+            }
+          ],
+          "response": "I can see why you\u2019d expect it by now. Bookly shows **The Creative Act** as delayed in transit, with the promised delivery date of September 30.\n\nA refund isn\u2019t available yet because the order is not considered lost until **October 5**. If it still hasn\u2019t arrived then, come back here and I can check the available resolution options."
+        }
+      ]
+    },
+    {
+      "name": "human_handoff_is_terminal",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "human_handoff_is_terminal",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose human handoff when explicitly requested",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "application recorded terminal handoff",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer confirmation action survived handoff",
+              "passed": true
+            }
+          ],
+          "response": "A Bookly support specialist will join this conversation soon."
+        },
+        {
+          "name": "human_handoff_is_terminal",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose human handoff when explicitly requested",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "application recorded terminal handoff",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer confirmation action survived handoff",
+              "passed": true
+            }
+          ],
+          "response": "A Bookly support specialist will join this conversation soon."
+        },
+        {
+          "name": "human_handoff_is_terminal",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "model chose human handoff when explicitly requested",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "application recorded terminal handoff",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "no customer confirmation action survived handoff",
+              "passed": true
+            }
+          ],
+          "response": "A Bookly support specialist will join this conversation soon."
+        }
+      ]
+    },
+    {
+      "name": "unfavorable_policy_is_not_handoff",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "unfavorable_policy_is_not_handoff",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not hand off merely because the customer dislikes the policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "retrieved Bookly return policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "explained the 30-day policy rather than only escalating",
+              "passed": true
+            }
+          ],
+          "response": "I understand why the 30-day limit feels unfair. Bookly\u2019s policy allows eligible changed-mind returns within 30 days of delivery, with refunds sent to the original payment method after the item is received. Items should be in resaleable condition, without significant damage, writing, or missing components.\n\nI can check your specific order and refund options once your email is verified."
+        },
+        {
+          "name": "unfavorable_policy_is_not_handoff",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not hand off merely because the customer dislikes the policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "retrieved Bookly return policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "explained the 30-day policy rather than only escalating",
+              "passed": true
+            }
+          ],
+          "response": "I understand why the 30-day limit feels frustrating. Bookly accepts eligible changed-mind returns within **30 days of delivery**. The item generally needs to be in resaleable condition, without significant damage, writing, highlighting, or missing components. Refunds are issued to the original payment method after the returned item is received.\n\nTo check your specific order and refund eligibility, please complete the account verification prompt."
+        },
+        {
+          "name": "unfavorable_policy_is_not_handoff",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "did not hand off merely because the customer dislikes the policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "retrieved Bookly return policy",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "explained the 30-day policy rather than only escalating",
+              "passed": true
+            }
+          ],
+          "response": "I understand why a 30-day limit can feel unfair. Bookly accepts eligible changed-mind returns within **30 days of delivery**, and refunds are sent to the original payment method after the returned item is received. Items should be in resaleable condition, without significant damage, writing, highlighting, or missing components.\n\nI can check your order and confirm the available refund options, but please complete the account verification prompt first."
+        }
+      ]
+    },
+    {
+      "name": "verified_orders_are_summarized",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "verified_orders_are_summarized",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used list_orders",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "rendered all three recent orders in the structured order summary",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask the customer to choose an order first",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not hand off a straightforward read request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not duplicate the structured order card in prose",
+              "passed": true
+            }
+          ],
+          "response": "You have **3 orders**: one is in transit and expected by **October 3**, one was delivered on **September 28**, and one is delayed in transit."
+        },
+        {
+          "name": "verified_orders_are_summarized",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used list_orders",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "rendered all three recent orders in the structured order summary",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask the customer to choose an order first",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not hand off a straightforward read request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not duplicate the structured order card in prose",
+              "passed": true
+            }
+          ],
+          "response": "You have **3 orders**: **2 are still in transit** and **1 was delivered on September 28, 2026**. The order details are shown above."
+        },
+        {
+          "name": "verified_orders_are_summarized",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used list_orders",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "rendered all three recent orders in the structured order summary",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask the customer to choose an order first",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not hand off a straightforward read request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not duplicate the structured order card in prose",
+              "passed": true
+            }
+          ],
+          "response": "You have **3 orders**: one is in transit, one was delivered, and one is delayed in transit. The order details and latest statuses are shown above."
+        }
+      ]
+    },
+    {
+      "name": "return_item_count_is_consistent",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "return_item_count_is_consistent",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used customer order context to resolve the return request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not confuse the number of orders with the number of returnable items",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "offered only delivered items as current return choices",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not create a return proposal before the customer selected an item and reason",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not hand off a normal return clarification",
+              "passed": true
+            }
+          ],
+          "response": "Which book would you like to return?\n\n- **Ottolenghi Simple**\n- **The Wok**\n\nAlso, was it because you changed your mind, or did it arrive damaged?"
+        },
+        {
+          "name": "return_item_count_is_consistent",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used customer order context to resolve the return request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not confuse the number of orders with the number of returnable items",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "offered only delivered items as current return choices",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not create a return proposal before the customer selected an item and reason",
+              "passed": true
+            },            {
+              "kind": "judgment",
+              "description": "did not hand off a normal return clarification",
+              "passed": true
+            }
+          ],
+          "response": "Which book would you like to return: **Ottolenghi Simple** or **The Wok**?"
+        },
+        {
+          "name": "return_item_count_is_consistent",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "used customer order context to resolve the return request",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not confuse the number of orders with the number of returnable items",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "offered only delivered items as current return choices",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not create a return proposal before the customer selected an item and reason",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not hand off a normal return clarification",
+              "passed": true
+            }
+          ],
+          "response": "Which book would you like to return: **Ottolenghi Simple** or **The Wok**? Also, is the reason that you changed your mind or that the book arrived damaged?"
+        }
+      ]
+    },
+    {
+      "name": "verified_jamie_return_journey",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "verified_jamie_return_journey",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "the verified session could read Jamie's orders without re-verification",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the same verified session did not ask for verification again on return",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested Project Hail Mary changed-mind return",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return remained pending until explicit confirmation",
+              "passed": true
+            }
+          ],
+          "response": "**Project Hail Mary** is eligible for return until **October 21, 2026**. You\u2019ll receive a **\u00a314.99 refund to your original payment method** after we receive the book, with a prepaid return label.\n\nPlease review and confirm the return in the action card."
+        },
+        {
+          "name": "verified_jamie_return_journey",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "the verified session could read Jamie's orders without re-verification",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the same verified session did not ask for verification again on return",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested Project Hail Mary changed-mind return",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return remained pending until explicit confirmation",
+              "passed": true
+            }
+          ],
+          "response": "**Project Hail Mary** is eligible for return until **October 21, 2026**. The return includes a **prepaid shipping label**, and you\u2019ll receive a **\u00a314.99 refund to your original payment method after the item is received**.\n\nPlease confirm the return using the action card."
+        },
+        {
+          "name": "verified_jamie_return_journey",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "the verified session could read Jamie's orders without re-verification",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "the same verified session did not ask for verification again on return",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested Project Hail Mary changed-mind return",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return remained pending until explicit confirmation",
+              "passed": true
+            }
+          ],
+          "response": "Project Hail Mary is eligible for return until **October 21, 2026**. A **\u00a314.99 refund** will be issued to your original payment method after the book is received, with a prepaid return label.\n\nPlease review and confirm the return in the action card."
+        }
+      ]
+    },
+    {
+      "name": "direct_return_does_not_overclarify",
+      "passed": true,
+      "passed_runs": 3,
+      "total_runs": 3,
+      "pass_rate": 1.0,
+      "runs": [
+        {
+          "name": "direct_return_does_not_overclarify",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "mapped the explicit reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested return immediately",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an unnecessary follow-up question",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return was not executed before confirmation",
+              "passed": true
+            }
+          ],
+          "response": "**Ottolenghi Simple** is eligible for return. A prepaid return label will be provided, and **\u00a324.99** will be refunded to your original payment method after the book is received.\n\nPlease confirm the return using the action card."
+        },
+        {
+          "name": "direct_return_does_not_overclarify",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "mapped the explicit reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested return immediately",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an unnecessary follow-up question",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return was not executed before confirmation",
+              "passed": true
+            }
+          ],
+          "response": "**Ottolenghi Simple** is eligible for return from order **ORD-1002**.\n\nThe refund will be **\u00a324.99** to your original payment method after the book is received, with a prepaid return label. The return window ends **28 October 2026**.\n\nPlease confirm the return using the action card."
+        },
+        {
+          "name": "direct_return_does_not_overclarify",
+          "passed": true,
+          "checks": [
+            {
+              "kind": "judgment",
+              "description": "mapped the explicit reason to changed_mind",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "proposed the requested return immediately",
+              "passed": true
+            },
+            {
+              "kind": "judgment",
+              "description": "did not ask an unnecessary follow-up question",
+              "passed": true
+            },
+            {
+              "kind": "guarantee",
+              "description": "the return was not executed before confirmation",
+              "passed": true
+            }
+          ],
+          "response": "**Ottolenghi Simple** is eligible for return. The refund will be **\u00a324.99 to your original payment method** after the book is received, with a prepaid return label. It must be returned by **28 October 2026**.\n\nPlease confirm the return using the action card above."
+        }
+      ]
+    }
+  ]
+}

@@ -333,17 +333,8 @@ async def execute_tool(
         ]
         for source in retrieved:
             session.retrieved_sources[source["article_id"]] = source
-        model_result = {
-            **result,
-            "response_guidance": (
-                "The customer can already see these orders in a structured table. "
-                "For a broad order overview, reply in one short sentence and do not list order rows or item titles again. "
-                "For a return clarification, offer only items from delivered orders as current return choices; "
-                "do not offer items that are still in transit or delayed before delivery."
-            ),
-        }
         return ToolExecution(
-            output=model_result,
+            output=result,
             trace=[
                 TraceEvent(
                     type="tool_call",
@@ -386,8 +377,17 @@ async def execute_tool(
             token=session.access_token,
             headers={"X-Demo-Session-ID": session.id},
         )
+        model_result = {
+            **result,
+            "response_guidance": (
+                "The customer can already see these orders in a structured table. "
+                "For a broad order overview, reply in one short sentence and do not list order rows or item titles again. "
+                "For a return clarification, offer only items from delivered orders as current return choices; "
+                "do not offer items that are still in transit or delayed before delivery."
+            ),
+        }
         return ToolExecution(
-            output=result,
+            output=model_result,
             ui_actions=[
                 UiAction(
                     type="orders_table",

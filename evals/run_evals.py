@@ -339,6 +339,11 @@ def grounded_order_tracking(client: BooklyClient) -> EvalRunResult:
                 ),
                 (
                     "judgment",
+                    "did not invent an incorrect relative collection date",
+                    lambda r: "collected yesterday, october 1" not in r.get("message", "").lower(),
+                ),
+                (
+                    "judgment",
                     "did not ask an already-verified customer to verify again",
                     lambda r: (
                         "verify_email" not in action_types(r)

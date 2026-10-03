@@ -113,6 +113,9 @@ def test_report_payload_contains_evidence_metadata(monkeypatch):
 
     assert payload["metadata"]["model"] == "gpt-test"
     assert payload["metadata"]["bookly_today"] == "2026-10-01"
+    assert payload["metadata"]["git_commit_sha"]
+    assert payload["metadata"]["git_dirty"] in {True, False, None}
+    assert len(payload["metadata"]["prompt_sha256"]) == 64
     assert payload["metadata"]["repeats"] == 3
     assert payload["metadata"]["scenario_count"] == 1
     assert payload["metadata"]["judgment_checks"] == {"passed": 3, "total": 3}

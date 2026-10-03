@@ -64,7 +64,8 @@ The suite contains paired positive and negative behaviors rather than only testi
    - naturally asks: "Can you gift-wrap a book and include a handwritten note?";
    - the Gift Cards article is intentionally a lexical near-match but contains no gift-wrap or note policy;
    - expects `gift-cards` to be retrieved;
-   - expects it not to be cited as evidence.
+   - expects it not to be cited as evidence;
+   - expects the agent to explain the low-risk knowledge gap without terminally handing off unless the customer asks for a specialist.
 
 4. **Private-state boundary**
    - anonymously asks where an order is;
@@ -108,13 +109,14 @@ The suite contains paired positive and negative behaviors rather than only testi
 11. **Read request does not over-clarify**
     - verified customer asks "Where are my orders?";
     - expects all recent orders in the deterministic structured order summary;
-    - expects concise model prose rather than duplicated order rows;
+    - expects concise model prose rather than duplicated order rows/item titles;
     - expects no unnecessary "which order?" question.
 
 12. **Order/item count consistency**
     - asks to return a book without identifying one;
     - expects order lookup and clarification;
-    - rejects copy that confuses the number of orders with the number of items.
+    - rejects copy that confuses the number of orders with the number of items;
+    - expects only delivered books to be offered as current return choices, rather than books that are still in transit.
 
 13. **Explicit return does not over-clarify**
     - asks to return a named item from a named order and explicitly says the reason is changed mind;
@@ -138,7 +140,9 @@ The console report prints per-scenario repeated-run pass rates plus separate tot
 .venv/bin/python evals/run_evals.py --json-out evals/results.json
 ```
 
-The JSON report includes the UTC run timestamp, configured model, pinned Bookly date, repeat count, threshold, aggregate judgment/guarantee counts, and every scenario run. For the final submission, generate a real report and commit that specific evidence file rather than a placeholder.
+The JSON report includes the UTC run timestamp, configured model, pinned Bookly date, Git commit SHA, whether the working tree was dirty, SHA-256 of the rendered system prompt, repeat count, threshold, aggregate judgment/guarantee counts, and every scenario run. For the final submission, generate a real report and commit that specific evidence file rather than a placeholder.
+
+With 13 scenarios repeated three times, the prototype evidence set contains **39 sampled conversations**. A clean run should be described as "39 conversations, no failed checks" (plus the exact check totals), not as "100% reliable." Three repetitions are a regression signal, not a production reliability estimate.
 
 ## CI
 

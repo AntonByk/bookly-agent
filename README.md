@@ -89,6 +89,12 @@ Public policy answers come from Knowledge. Customer/order facts come from Commer
 
 A related article is not automatically evidence. For example, the help centre has Gift Cards content but deliberately does not establish whether gift wrapping or handwritten notes are available.
 
+### 6. Shared public demo isolation
+
+Mutable synthetic Commerce state is namespaced by the application session. Two reviewers can authenticate as the same demo customer and create independent returns without contaminating each other's state. Starting a new chat deletes the Agent session and best-effort clears only that session's Commerce return/idempotency state.
+
+This is demo-environment isolation, not a substitute for production customer/transaction persistence.
+
 ## Customer experience
 
 The final demo UI is intentionally customer-facing rather than an engineering console:
@@ -182,6 +188,58 @@ http://127.0.0.1:8000/
 Using `.venv/bin/python run.py` explicitly is recommended because it guarantees the demo uses the project interpreter even on machines with custom Python tooling.
 
 If one of Bookly's local ports is already in use, startup fails with a clear message rather than attaching to a stale process.
+
+## Optional hosted demo (Railway)
+
+The same repository supports both local cloning and a shared hosted demo.
+
+Local development remains the default:
+
+```bash
+cp .env.example .env
+# Add your own OPENAI_API_KEY
+.venv/bin/python run.py
+```
+
+For Railway, connect this GitHub repository as a single service. Railpack detects the `Procfile` and starts:
+
+```text
+python run.py --no-browser
+```
+
+The runner uses Railway's injected `PORT` for the public Agent process and binds only that Agent process to `0.0.0.0`. Identity, Commerce and Knowledge remain reachable only on localhost inside the container.
+
+Recommended Railway service variables:
+
+```text
+OPENAI_API_KEY=<dedicated Bookly demo project key>
+OPENAI_MODEL=gpt-5.6-luna
+PUBLIC_DEMO=true
+BOOKLY_TODAY=2026-10-01
+BOOKLY_MOCK_TOKEN_SECRET=<random strong secret>
+DEMO_RATE_LIMIT_REQUESTS=30
+DEMO_RATE_LIMIT_WINDOW_SECONDS=600
+```
+
+Do not commit the hosted `OPENAI_API_KEY`. Use a dedicated disposable OpenAI project/key with a low spend limit.
+
+Railway service settings:
+
+- source: this GitHub repository, branch `main`;
+- one replica only (session and synthetic transaction state are intentionally in memory);
+- healthcheck path: `/health`;
+- generate a public Railway domain after the deployment is healthy;
+- no database or Redis is required for this prototype.
+
+The public demo includes:
+
+- per-demo-session mutable Commerce state so reviewers cannot interfere with one another;
+- server-side cleanup when **Start new chat** is used;
+- hosted-only request rate limiting;
+- `robots.txt` plus `noindex,nofollow,noarchive`;
+- an explicit synthetic-data label in the UI.
+
+A deployment restart intentionally clears all in-memory demo state.
 
 ## Suggested demo journey
 
@@ -277,7 +335,7 @@ The prototype fails closed around consequential actions.
 
 This is intentionally a prototype, not a production platform.
 
-- sessions and pending actions are in memory;
+- sessions, pending actions and synthetic mutable Commerce state are in memory and the hosted demo should run as one replica;
 - the signed demo token has no production identity lifecycle;
 - Knowledge uses simple lexical retrieval rather than a managed search/RAG stack;
 - Bookly services are mocked local HTTP services;

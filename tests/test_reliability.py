@@ -7,7 +7,8 @@ from app.agent.prompts import build_system_prompt
 from app.agent.actions import PendingAction
 from app.agent.models import TraceEvent, UiAction
 import app.agent.server as agent_server
-from app.agent.server import app as agent_app
+from app.agent.server import RATE_LIMIT_BUCKETS, app as agent_app
+from app.agent.settings import settings
 from app.agent.session import Session, sessions
 from app.agent.tools import ToolServiceError
 from services.commerce.server import (
@@ -17,6 +18,7 @@ from services.commerce.server import (
 )
 from services.identity.server import issue_token
 from services.knowledge.server import app as knowledge_app
+from run import build_services
 
 
 def test_prompt_contains_pinned_demo_date():
@@ -425,3 +427,114 @@ def test_cancel_endpoint_removes_pending_action_and_records_cancellation():
         and event["action"] == "cancel_return_proposal"
         for event in session.history
     )
+
+
+def test_mutable_commerce_state_is_isolated_by_demo_session():
+    CREATED_RETURNS.clear()
+    ACTIVE_RETURNS_BY_ITEM.clear()
+
+    token = issue_token(
+        "CUST-001",
+        ["orders:read", "returns:read", "returns:execute"],
+    )
+    payload = {
+        "order_id": "ORD-1002",
+        "item_id": "ITEM-OTTOLENGHI",
+        "reason_category": "changed_mind",
+    }
+    client = TestClient(commerce_app)
+
+    session_a = {
+        "Authorization": f"Bearer {token}",
+        "X-Demo-Session-ID": "reviewer-a",
+    }
+    session_b = {
+        "Authorization": f"Bearer {token}",
+        "X-Demo-Session-ID": "reviewer-b",
+    }
+
+    first_a = client.post(
+        "/v1/returns",
+        headers={**session_a, "Idempotency-Key": "ACT-A1"},
+        json=payload,
+    )
+    assert first_a.status_code == 200
+
+    duplicate_a = client.post(
+        "/v1/returns",
+        headers={**session_a, "Idempotency-Key": "ACT-A2"},
+        json=payload,
+    )
+    assert duplicate_a.status_code == 409
+
+    first_b = client.post(
+        "/v1/returns",
+        headers={**session_b, "Idempotency-Key": "ACT-B1"},
+        json=payload,
+    )
+    assert first_b.status_code == 200
+
+    reset_a = client.delete("/v1/demo/sessions/reviewer-a")
+    assert reset_a.status_code == 200
+    assert reset_a.json()["returns_removed"] == 1
+
+    a_after_reset = client.post(
+        "/v1/returns/check",
+        headers=session_a,
+        json=payload,
+    )
+    b_after_reset = client.post(
+        "/v1/returns/check",
+        headers=session_b,
+        json=payload,
+    )
+    assert a_after_reset.json()["eligible"] is True
+    assert b_after_reset.json()["eligible"] is False
+    assert b_after_reset.json()["existing_return_id"] == first_b.json()["return_id"]
+
+
+def test_railway_port_overrides_local_agent_port(monkeypatch):
+    monkeypatch.setenv("AGENT_PORT", "8000")
+    monkeypatch.setenv("PORT", "9123")
+    services = build_services()
+    agent = next(service for service in services if service[0] == "Agent")
+    assert agent[2] == 9123
+
+
+def test_robots_disallow_indexing():
+    client = TestClient(agent_app)
+    response = client.get("/robots.txt")
+    assert response.status_code == 200
+    assert response.text == "User-agent: *\nDisallow: /\n"
+
+
+def test_public_demo_rate_limit_is_opt_in(monkeypatch):
+    RATE_LIMIT_BUCKETS.clear()
+    monkeypatch.setattr(settings, "public_demo", True)
+    monkeypatch.setattr(settings, "demo_rate_limit_requests", 2)
+    monkeypatch.setattr(settings, "demo_rate_limit_window_seconds", 600)
+
+    client = TestClient(agent_app)
+    headers = {"X-Real-IP": "203.0.113.10"}
+
+    first = client.post(
+        "/api/auth/start",
+        headers=headers,
+        json={"session_id": None, "email": "alex@example.com"},
+    )
+    second = client.post(
+        "/api/auth/start",
+        headers=headers,
+        json={"session_id": None, "email": "alex@example.com"},
+    )
+    third = client.post(
+        "/api/auth/start",
+        headers=headers,
+        json={"session_id": None, "email": "alex@example.com"},
+    )
+
+    assert first.status_code != 429
+    assert second.status_code != 429
+    assert third.status_code == 429
+    assert "temporary request limit" in third.json()["detail"]
+    RATE_LIMIT_BUCKETS.clear()

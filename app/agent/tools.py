@@ -373,7 +373,7 @@ async def execute_tool(
             "GET",
             f"{settings.commerce_base_url}/v1/orders",
             token=session.access_token,
-        headers={"X-Demo-Session-ID": session.id},
+            headers={"X-Demo-Session-ID": session.id},
         )
         return ToolExecution(
             output=result,
@@ -397,21 +397,21 @@ async def execute_tool(
             "GET",
             f"{settings.commerce_base_url}/v1/orders/{arguments['order_id']}",
             token=session.access_token,
-        headers={"X-Demo-Session-ID": session.id},
+            headers={"X-Demo-Session-ID": session.id},
         )
     elif name == "get_tracking":
         result = await _request(
             "GET",
             f"{settings.commerce_base_url}/v1/orders/{arguments['order_id']}/tracking",
             token=session.access_token,
-        headers={"X-Demo-Session-ID": session.id},
+            headers={"X-Demo-Session-ID": session.id},
         )
     elif name == "get_resolution_options":
         result = await _request(
             "GET",
             f"{settings.commerce_base_url}/v1/orders/{arguments['order_id']}/resolution-options",
             token=session.access_token,
-        headers={"X-Demo-Session-ID": session.id},
+            headers={"X-Demo-Session-ID": session.id},
         )
     elif name == "check_return_eligibility":
         result = await _request(

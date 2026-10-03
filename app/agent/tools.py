@@ -45,8 +45,10 @@ PUBLIC_TOOLS = [
         "type": "function",
         "name": "request_human_handoff",
         "description": (
-            "Hand the conversation to a human support specialist when the customer explicitly asks for a human, "
-            "or when the request cannot be resolved safely with the available Bookly knowledge and tools. "
+            "Hand the conversation to a human support specialist only when the customer explicitly asks for a human, "
+            "explicitly accepts an offer of human help, or a customer-specific case genuinely needs human judgment to proceed safely. "
+            "For a low-risk factual question that the help centre does not answer, explain the knowledge gap and offer a specialist, "
+            "but do not call this tool unless the customer asks for or accepts the handoff. "
             "Do not use this merely because clarification is needed or because a policy outcome is unfavorable."
         ),
         "parameters": {

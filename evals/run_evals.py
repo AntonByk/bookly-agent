@@ -872,11 +872,15 @@ def report_payload(
 ) -> dict:
     judgment_passed, judgment_total = _check_totals(summaries, "judgment")
     guarantee_passed, guarantee_total = _check_totals(summaries, "guarantee")
+    bookly_today = os.getenv("BOOKLY_TODAY", "2026-10-01")
     return {
         "metadata": {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
             "model": os.getenv("OPENAI_MODEL", "not-set"),
-            "bookly_today": os.getenv("BOOKLY_TODAY", "2026-10-01"),
+            "bookly_today": bookly_today,
+            "git_commit_sha": _git_commit_sha(),
+            "git_dirty": _git_dirty(),
+            "prompt_sha256": _prompt_sha256(bookly_today),
             "repeats": repeats,
             "min_pass_rate": min_pass_rate,
             "scenario_count": len(summaries),

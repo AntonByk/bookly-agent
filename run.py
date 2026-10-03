@@ -21,11 +21,12 @@ def dependency_check() -> list[str]:
 
 
 def build_services() -> list[tuple[str, str, int]]:
+    agent_port = int(os.getenv("PORT") or os.getenv("AGENT_PORT", "8000"))
     return [
         ("Identity", "services.identity.server:app", int(os.getenv("IDENTITY_PORT", "8001"))),
         ("Commerce", "services.commerce.server:app", int(os.getenv("COMMERCE_PORT", "8002"))),
         ("Knowledge", "services.knowledge.server:app", int(os.getenv("KNOWLEDGE_PORT", "8003"))),
-        ("Agent", "app.agent.server:app", int(os.getenv("AGENT_PORT", "8000"))),
+        ("Agent", "app.agent.server:app", agent_port),
     ]
 
 
@@ -98,7 +99,12 @@ def main() -> int:
     signal.signal(signal.SIGTERM, stop_all)
 
     print("Bookly Agent - starting local services...\n")
+    public_agent_host = os.getenv("AGENT_HOST") or (
+        "0.0.0.0" if os.getenv("PORT") else "127.0.0.1"
+    )
+
     for name, app, port in services:
+        host = public_agent_host if name == "Agent" else "127.0.0.1"
         process = subprocess.Popen(
             [
                 sys.executable,
@@ -106,7 +112,7 @@ def main() -> int:
                 "uvicorn",
                 app,
                 "--host",
-                "127.0.0.1",
+                host,
                 "--port",
                 str(port),
             ],

@@ -190,7 +190,11 @@ class ToolExecution:
 
 
 def available_tools(session: Session) -> list[dict[str, Any]]:
-    tools = list(PUBLIC_TOOLS)
+    tools = [
+        tool
+        for tool in PUBLIC_TOOLS
+        if not (session.authenticated and tool["name"] == "request_authentication")
+    ]
     if session.authenticated:
         tools.extend(VERIFIED_TOOLS)
     return tools

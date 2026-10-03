@@ -27,7 +27,11 @@ PUBLIC_TOOLS = [
     {
         "type": "function",
         "name": "request_authentication",
-        "description": "Request customer email verification when the customer's request requires private order or account state.",
+        "description": (
+            "Request customer email verification when the customer's request requires private order or account state. "
+            "If the same message also asks about or challenges a public Bookly policy, search and answer that policy first, "
+            "then request verification for the customer-specific check."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

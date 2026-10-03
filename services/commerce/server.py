@@ -17,8 +17,8 @@ SECRET = os.getenv("BOOKLY_MOCK_TOKEN_SECRET", "bookly-local-demo-secret").encod
 TODAY = date.fromisoformat(os.getenv("BOOKLY_TODAY", "2026-10-01"))
 RETURN_WINDOW_DAYS = 30
 LOST_AFTER_BUSINESS_DAYS = 3
-CREATED_RETURNS: dict[str, dict] = {}
-ACTIVE_RETURNS_BY_ITEM: dict[tuple[str, str, str], dict] = {}
+CREATED_RETURNS: dict[tuple[str, str], dict] = {}
+ACTIVE_RETURNS_BY_ITEM: dict[tuple[str, str, str, str], dict] = {}
 
 app = FastAPI(title="Bookly Commerce API", version="0.3.0")
 
@@ -69,8 +69,34 @@ def item_for(order: dict, item_id: str) -> dict:
     return item
 
 
-def active_return_key(customer_id: str, order_id: str, item_id: str) -> tuple[str, str, str]:
-    return (customer_id, order_id, item_id)
+def active_return_key(
+    demo_session_id: str,
+    customer_id: str,
+    order_id: str,
+    item_id: str,
+) -> tuple[str, str, str, str]:
+    return (demo_session_id, customer_id, order_id, item_id)
+
+
+def idempotency_key(demo_session_id: str, request_id: str) -> tuple[str, str]:
+    return (demo_session_id, request_id)
+
+
+def reset_demo_session(demo_session_id: str) -> dict:
+    created_before = len(CREATED_RETURNS)
+    active_before = len(ACTIVE_RETURNS_BY_ITEM)
+
+    for key in [key for key in CREATED_RETURNS if key[0] == demo_session_id]:
+        CREATED_RETURNS.pop(key, None)
+    for key in [key for key in ACTIVE_RETURNS_BY_ITEM if key[0] == demo_session_id]:
+        ACTIVE_RETURNS_BY_ITEM.pop(key, None)
+
+    return {
+        "reset": True,
+        "demo_session_id": demo_session_id,
+        "returns_removed": created_before - len(CREATED_RETURNS),
+        "active_returns_removed": active_before - len(ACTIVE_RETURNS_BY_ITEM),
+    }
 
 
 def add_business_days(start: date, days: int) -> date:
@@ -195,14 +221,18 @@ async def resolution_options(order_id: str, authorization: str | None = Header(d
 
 
 @app.post("/v1/returns/check")
-async def check_return(request: EligibilityRequest, authorization: str | None = Header(default=None)) -> dict:
+async def check_return(
+    request: EligibilityRequest,
+    authorization: str | None = Header(default=None),
+    demo_session_id: str = Header(default="local", alias="X-Demo-Session-ID"),
+) -> dict:
     claims = decode_token(authorization)
     require_scope(claims, "returns:read")
     order = owned_order(request.order_id, claims["sub"])
     item = item_for(order, request.item_id)
 
     existing = ACTIVE_RETURNS_BY_ITEM.get(
-        active_return_key(claims["sub"], request.order_id, request.item_id)
+        active_return_key(demo_session_id, claims["sub"], request.order_id, request.item_id)
     )
     if existing:
         return {
@@ -226,17 +256,19 @@ async def check_return(request: EligibilityRequest, authorization: str | None = 
 async def create_return(
     request: CreateReturnRequest,
     authorization: str | None = Header(default=None),
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    idempotency_key_header: str | None = Header(default=None, alias="Idempotency-Key"),
+    demo_session_id: str = Header(default="local", alias="X-Demo-Session-ID"),
 ) -> dict:
     claims = decode_token(authorization)
     require_scope(claims, "returns:execute")
-    if not idempotency_key:
+    if not idempotency_key_header:
         raise HTTPException(400, "Idempotency-Key is required")
 
-    if idempotency_key in CREATED_RETURNS:
-        return CREATED_RETURNS[idempotency_key]
+    request_key = idempotency_key(demo_session_id, idempotency_key_header)
+    if request_key in CREATED_RETURNS:
+        return CREATED_RETURNS[request_key]
 
-    key = active_return_key(claims["sub"], request.order_id, request.item_id)
+    key = active_return_key(demo_session_id, claims["sub"], request.order_id, request.item_id)
     existing = ACTIVE_RETURNS_BY_ITEM.get(key)
     if existing:
         raise HTTPException(
@@ -267,6 +299,11 @@ async def create_return(
         ),
         "refund_timing": verdict["refund_timing"],
     }
-    CREATED_RETURNS[idempotency_key] = result
+    CREATED_RETURNS[request_key] = result
     ACTIVE_RETURNS_BY_ITEM[key] = result
     return result
+
+
+@app.delete("/v1/demo/sessions/{demo_session_id}")
+async def reset_session_state(demo_session_id: str) -> dict:
+    return reset_demo_session(demo_session_id)

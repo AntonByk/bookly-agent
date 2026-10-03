@@ -142,7 +142,7 @@ The console report prints per-scenario repeated-run pass rates plus separate tot
 
 The JSON report includes the UTC run timestamp, configured model, pinned Bookly date, Git commit SHA, whether the working tree was dirty, SHA-256 of the rendered system prompt, repeat count, threshold, aggregate judgment/guarantee counts, and every scenario run. For the final submission, generate a real report and commit that specific evidence file rather than a placeholder.
 
-With 13 scenarios repeated three times, the prototype evidence set contains **39 sampled conversations**. A clean run should be described as "39 conversations, no failed checks" (plus the exact check totals), not as "100% reliable." Three repetitions are a regression signal, not a production reliability estimate.
+With 14 scenarios repeated three times, the prototype evidence set contains **42 sampled conversations**. A clean run should be described as "39 conversations, no failed checks" (plus the exact check totals), not as "100% reliable." Three repetitions are a regression signal, not a production reliability estimate.
 
 ## CI
 

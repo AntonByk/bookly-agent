@@ -10,7 +10,7 @@ import app.agent.server as agent_server
 from app.agent.server import RATE_LIMIT_BUCKETS, app as agent_app
 from app.agent.settings import settings
 from app.agent.session import Session, sessions
-from app.agent.tools import PUBLIC_TOOLS, ToolServiceError
+from app.agent.tools import PUBLIC_TOOLS, ToolServiceError, available_tools
 from services.commerce.server import (
     ACTIVE_RETURNS_BY_ITEM,
     CREATED_RETURNS,

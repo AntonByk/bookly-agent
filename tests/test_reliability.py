@@ -538,3 +538,96 @@ def test_public_demo_rate_limit_is_opt_in(monkeypatch):
     assert third.status_code == 429
     assert "temporary request limit" in third.json()["detail"]
     RATE_LIMIT_BUCKETS.clear()
+
+
+def test_agent_reset_propagates_demo_session_cleanup(monkeypatch):
+    captured = {}
+
+    class ResetAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def delete(self, url, **kwargs):
+            captured["url"] = url
+            return httpx.Response(
+                200,
+                json={"reset": True},
+                request=httpx.Request("DELETE", url),
+            )
+
+    session = sessions.get_or_create("reviewer-reset-propagation")
+    monkeypatch.setattr(agent_server.httpx, "AsyncClient", ResetAsyncClient)
+
+    client = TestClient(agent_app)
+    response = client.delete(f"/api/session/{session.id}")
+
+    assert response.status_code == 200
+    assert response.json() == {"reset": True, "commerce_reset": True}
+    assert captured["url"].endswith(
+        "/v1/demo/sessions/reviewer-reset-propagation"
+    )
+    try:
+        sessions.get(session.id)
+    except KeyError:
+        pass
+    else:
+        raise AssertionError("Agent session should be deleted after reset")
+
+
+def test_confirm_propagates_demo_session_namespace(monkeypatch):
+    captured = {}
+
+    class ConfirmAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, **kwargs):
+            captured["headers"] = kwargs["headers"]
+            return httpx.Response(
+                200,
+                json={
+                    "return_id": "RET-TEST",
+                    "refund_amount": 24.99,
+                    "refund_timing": "after_item_received",
+                },
+                request=httpx.Request("POST", url),
+            )
+
+    session = sessions.get_or_create("reviewer-confirm-namespace")
+    session.access_token = issue_token(
+        "CUST-001",
+        ["orders:read", "returns:read", "returns:execute"],
+    )
+    session.customer_id = "CUST-001"
+    action = PendingAction(
+        id="ACT-NAMESPACE",
+        order_id="ORD-1002",
+        item_id="ITEM-OTTOLENGHI",
+        reason_category="changed_mind",
+        summary={},
+    )
+    session.pending_actions[action.id] = action
+
+    monkeypatch.setattr(agent_server.httpx, "AsyncClient", ConfirmAsyncClient)
+
+    client = TestClient(agent_app)
+    response = client.post(
+        f"/api/actions/{action.id}/confirm",
+        json={"session_id": session.id},
+    )
+
+    assert response.status_code == 200
+    assert captured["headers"]["X-Demo-Session-ID"] == session.id
+    assert captured["headers"]["Idempotency-Key"] == action.id

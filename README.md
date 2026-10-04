@@ -15,18 +15,19 @@ A deliberately small, end-to-end AI support prototype for the Decagon Solutions 
 
 ## What I assumed
 
-Bookly is a fictional retailer, so I treated the exercise as an assumed discovery conversation with a Head of CX, with Security and Finance also caring about the design.
+Bookly is a fictional retailer, so the brief leaves some product, policy and integration details open. For the prototype I assumed:
 
-I optimized the prototype around four outcomes:
+- **Channel:** this is a web chat experience rather than voice.
+- **Customer identity:** the one-time email code stands in for a logged-in customer session; public help remains available anonymously.
+- **Systems of record:** Bookly has separate sources for identity, commerce/order state and public support content. The prototype represents them with mocked Identity, Commerce and Knowledge services.
+- **Returns and delivery policy:** the 30-day return window and delayed/lost-order threshold are made-up Bookly policies for the exercise, owned by Commerce rather than inferred by the model.
+- **Human support:** a specialist support team exists for cases that require a person; the prototype models the handoff boundary rather than integrating a real contact-centre platform.
+- **Business date:** demo dates are pinned to **1 October 2026** so return windows, tracking language and delayed-order decisions are reproducible.
+- **Success:** because no baseline metrics were provided, I would validate a pilot on end-to-end resolution, unnecessary escalation, time to resolution, policy quality and CSAT rather than inventing target improvements.
 
-- resolve more customer issues end to end;
-- reduce unnecessary human escalation and time to resolution;
-- keep policy and customer-specific answers grounded in Bookly-owned sources;
-- never execute a consequential action without explicit customer confirmation.
+I treated the exercise as an assumed discovery conversation with a Head of CX, with Security and Finance also caring about the design. I chose depth over breadth: the prototype focuses on the requested support areas - general questions, order status, and returns/refunds - and implements a small number of journeys deeply rather than a large number superficially.
 
-I chose depth over breadth. The prototype focuses on the requested support areas - general questions, order status, and returns/refunds - and implements a small number of journeys deeply rather than a large number superficially.
-
-The mocked Identity, Commerce and Knowledge services represent real trust and ownership boundaries I would expect to integrate with in production. The prototype intentionally does not claim production readiness.
+The mocked services represent real trust and ownership boundaries I would expect to integrate with in production. The prototype intentionally does not claim production readiness.
 
 ## Architecture thesis
 
@@ -38,7 +39,7 @@ The model reasons over the conversation. Bookly-controlled software owns permiss
 Browser
    |
    v
-Bookly AI orchestration layer
+Bookly AI Concierge layer
    |------------------> OpenAI Responses API
    |
    |---- public ------> Knowledge service
@@ -55,7 +56,7 @@ The mocked services represent meaningful trust and authority boundaries:
 - **Identity** verifies the customer and issues a signed customer-scoped token.
 - **Commerce** owns orders, tracking, return eligibility, delayed-order resolution policy, ownership checks, idempotency, duplicate-return protection and transaction execution.
 - **Knowledge** exposes a 21-article Bookly help centre covering delivery, returns, damaged/wrong items, pre-orders, payments and common account questions.
-- **Bookly AI orchestration layer** owns session state, the direct LLM tool loop, capability exposure, pending actions, confirmation, human handoff and the browser UI.
+- **Bookly AI Concierge layer** owns session state, the direct LLM tool loop, capability exposure, pending actions, confirmation, human handoff and the browser UI.
 
 The model never receives the customer access token. It calls application tools, and those tools call Bookly services.
 

@@ -13,54 +13,9 @@ A deliberately small, end-to-end AI support prototype for the Decagon Solutions 
 
 > All customer, order and transaction data is synthetic. The demo does not connect to real Bookly systems or create real transactions.
 
-## What I assumed
+## Run the demo
 
-Bookly is a fictional retailer, so the brief leaves some product, policy and integration details open. For the prototype I assumed:
-
-- **Channel:** this is a web chat experience rather than voice.
-- **Customer identity:** the one-time email code stands in for a logged-in customer session; public help remains available anonymously.
-- **Systems of record:** Bookly has separate sources for identity, commerce/order state and public support content. The prototype represents them with mocked Identity, Commerce and Knowledge services.
-- **Returns and delivery policy:** the 30-day return window and delayed/lost-order threshold are made-up Bookly policies for the exercise, owned by Commerce rather than inferred by the model.
-- **Human support:** a specialist support team exists for cases that require a person; the prototype models the handoff boundary rather than integrating a real contact-centre platform.
-- **Business date:** demo dates are pinned to **1 October 2026** so return windows, tracking language and delayed-order decisions are reproducible.
-- **Success:** because no baseline metrics were provided, I would validate a pilot on end-to-end resolution, unnecessary escalation, time to resolution, policy quality and CSAT rather than inventing target improvements.
-
-I treated the exercise as an assumed discovery conversation with a Head of CX, with Security and Finance also caring about the design. I chose depth over breadth: the prototype focuses on the requested support areas - general questions, order status, and returns/refunds - and implements a small number of journeys deeply rather than a large number superficially.
-
-The mocked services represent real trust and ownership boundaries I would expect to integrate with in production. The prototype intentionally does not claim production readiness.
-
-## Architecture thesis
-
-**The model can interpret, retrieve and propose. It cannot authenticate customers, invent business state, determine transactional eligibility, or directly execute consequential actions.**
-
-The model reasons over the conversation. Bookly-controlled software owns permissions and pending actions, while systems of record remain authoritative for identity, policy, customer state, eligibility and execution.
-
-```text
-Browser
-   |
-   v
-Bookly AI Concierge layer
-   |------------------> OpenAI Responses API
-   |
-   |---- public ------> Knowledge service
-   |
-   |---- verify ------> Identity service
-   |
-   |---- scoped ------> Commerce service
-   |
-   '---- terminal ----> Human handoff state
-```
-
-The mocked services represent meaningful trust and authority boundaries:
-
-- **Identity** verifies the customer and issues a signed customer-scoped token.
-- **Commerce** owns orders, tracking, return eligibility, delayed-order resolution policy, ownership checks, idempotency, duplicate-return protection and transaction execution.
-- **Knowledge** exposes a 21-article Bookly help centre covering delivery, returns, damaged/wrong items, pre-orders, payments and common account questions.
-- **Bookly AI Concierge layer** owns session state, the direct LLM tool loop, capability exposure, pending actions, confirmation, human handoff and the browser UI.
-
-The model never receives the customer access token. It calls application tools, and those tools call Bookly services.
-
-## Try the hosted demo
+### Hosted demo (recommended)
 
 Open:
 
@@ -101,7 +56,7 @@ Useful secondary scenarios:
 
 Starting a new chat resets only that demo session's synthetic mutable state.
 
-## Run locally
+### Run locally
 
 Requirements:
 
@@ -158,6 +113,53 @@ http://127.0.0.1:8000/?debug=1
 The debug view shows chronological observable application events alongside the customer experience. It does not expose private model reasoning.
 
 Using `.venv/bin/python run.py` explicitly is recommended because it guarantees the project interpreter is used. If one of Bookly's ports is already occupied, startup fails clearly instead of attaching to a stale process.
+
+## What I assumed
+
+Bookly is a fictional retailer, so the brief leaves some product, policy and integration details open. For the prototype I assumed:
+
+- **Channel:** this is a web chat experience rather than voice.
+- **Customer identity:** the one-time email code stands in for a logged-in customer session; public help remains available anonymously.
+- **Systems of record:** Bookly has separate sources for identity, commerce/order state and public support content. The prototype represents them with mocked Identity, Commerce and Knowledge services.
+- **Returns and delivery policy:** the 30-day return window and delayed/lost-order threshold are made-up Bookly policies for the exercise, owned by Commerce rather than inferred by the model.
+- **Human support:** a specialist support team exists for cases that require a person; the prototype models the handoff boundary rather than integrating a real contact-centre platform.
+- **Business date:** demo dates are pinned to **1 October 2026** so return windows, tracking language and delayed-order decisions are reproducible.
+- **Success:** because no baseline metrics were provided, I would validate a pilot on end-to-end resolution, unnecessary escalation, time to resolution, policy quality and CSAT rather than inventing target improvements.
+
+I treated the exercise as an assumed discovery conversation with a Head of CX, with Security and Finance also caring about the design.
+
+The mocked services represent real trust and ownership boundaries I would expect to integrate with in production.
+
+## Architecture thesis
+
+**The model can interpret, retrieve and propose. It cannot authenticate customers, invent business state, determine transactional eligibility, or directly execute consequential actions.**
+
+The model reasons over the conversation. Bookly-controlled software owns permissions and pending actions, while systems of record remain authoritative for identity, policy, customer state, eligibility and execution.
+
+```text
+Browser
+   |
+   v
+Bookly AI Concierge layer
+   |------------------> OpenAI Responses API
+   |
+   |---- public ------> Knowledge service
+   |
+   |---- verify ------> Identity service
+   |
+   |---- scoped ------> Commerce service
+   |
+   '---- terminal ----> Human handoff state
+```
+
+The mocked services represent meaningful trust and authority boundaries:
+
+- **Identity** verifies the customer and issues a signed customer-scoped token.
+- **Commerce** owns orders, tracking, return eligibility, delayed-order resolution policy, ownership checks, idempotency, duplicate-return protection and transaction execution.
+- **Knowledge** exposes a 21-article Bookly help centre covering delivery, returns, damaged/wrong items, pre-orders, payments and common account questions.
+- **Bookly AI Concierge layer** owns session state, the direct LLM tool loop, capability exposure, pending actions, confirmation, human handoff and the browser UI.
+
+The model never receives the customer access token. It calls application tools, and those tools call Bookly services.
 
 ## Demo data and reproducibility
 
@@ -285,18 +287,6 @@ To generate a new report:
 ```
 
 Live model evals are intentionally not a normal CI gate because they call a paid external model and are probabilistic.
-
-## Failure behavior
-
-The prototype fails closed around consequential actions.
-
-- model timeouts fail without an automatic retry; connection errors, rate limits and provider 5xx errors are retried once;
-- unavailable Identity does not grant account access;
-- a Commerce connection failure preserves the pending action and reports that no return was created;
-- a Commerce timeout is treated as an unknown outcome, preserves the pending action, and allows an idempotent Confirm retry;
-- duplicate execution attempts are protected by idempotency;
-- a second return for the same active item is blocked independently of the idempotency key;
-- a handed-off session cannot execute stale AI actions.
 
 ## Prototype trade-offs
 

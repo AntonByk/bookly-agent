@@ -15,7 +15,9 @@ The committed final evidence report is:
 evals/evidence-2026-10-03-final.json
 ```
 
-It was generated against the final behavior under test with:
+It was generated at application commit `9c170cc` (system prompt SHA-256 `12abf950…`). Subsequent commits change documentation only; the application behavior under test is unchanged.
+
+Run configuration:
 
 - model: `gpt-5.6-luna`
 - pinned Bookly date: `2026-10-01`

@@ -5,7 +5,31 @@ Bookly separates deterministic software guarantees from model judgment.
 - `tests/` covers behavior software should make certain.
 - `evals/run_evals.py` measures behavior that depends on the live model and orchestration.
 
-The evaluator uses the same Agent HTTP API as the browser. It does not use a second model as a judge. Checks are based on observable evidence: tool choices, retrieved article IDs, citations, UI actions, grounded facts, clarification behavior and handoff decisions.
+The evaluator uses the same Agent HTTP API as the browser. It does not use a second model as a judge. Checks are based on observable evidence: tool choices, retrieved article IDs, citations, UI actions, grounded facts, clarification behavior, customer-session continuity and handoff decisions.
+
+## Final submission evidence
+
+The committed final evidence report is:
+
+```text
+evals/evidence-2026-10-03-final.json
+```
+
+It was generated against the final behavior under test with:
+
+- model: `gpt-5.6-luna`
+- pinned Bookly date: `2026-10-01`
+- repeats per scenario: `3`
+- scenarios: `14`
+
+Final sampled result:
+
+- **14/14 scenarios passed**
+- **42 sampled conversations**
+- **135/135 model-judgment checks passed**
+- **21/21 software-guarantee checks passed**
+
+These results are regression evidence, not a claim of 100% production reliability.
 
 ## Why repeated runs
 
@@ -32,7 +56,7 @@ For the take-home, the default is intentionally strict. A failure should be insp
 
 ## Fresh state by default
 
-The evaluator launches a separate Bookly stack on fresh local ports, runs the suite, and tears it down afterwards. This prevents previous demo actions from contaminating return eligibility or other in-memory state.
+The evaluator launches a separate Bookly stack on fresh local ports, runs the suite and tears it down afterwards. This prevents previous demo actions from contaminating return eligibility or other in-memory state.
 
 A pre-existing instance can still be used:
 
@@ -40,7 +64,7 @@ A pre-existing instance can still be used:
 .venv/bin/python evals/run_evals.py --base-url http://127.0.0.1:8000
 ```
 
-but a fresh stack is recommended for stateful scenarios.
+A fresh stack is recommended for stateful scenarios.
 
 The isolated stack still uses the model configuration from the project environment / `.env`, so a valid `OPENAI_API_KEY` is required.
 
@@ -61,33 +85,34 @@ The suite contains paired positive and negative behaviors rather than only testi
    - rejects an answer that silently presents UK-only guidance as the complete policy.
 
 3. **Near-match is not evidence**
-   - naturally asks: "Can you gift-wrap a book and include a handwritten note?";
+   - asks whether Bookly can gift-wrap a book and include a handwritten note;
    - the Gift Cards article is intentionally a lexical near-match but contains no gift-wrap or note policy;
    - expects `gift-cards` to be retrieved;
    - expects it not to be cited as evidence;
    - expects the agent to explain the low-risk knowledge gap without terminally handing off unless the customer asks for a specialist.
 
-4. **Private-state boundary**
+4. **Private state requires authentication**
    - anonymously asks where an order is;
-   - model judgment: choose verification;
-   - software guarantee: no customer Commerce read before verification.
+   - model judgment: choose the verification path;
+   - software guarantee: no customer Commerce read occurs before verification.
 
-5. **Grounded tracking**
+5. **Grounded order tracking**
    - asks whether Dune was collected and where it is now;
    - expects Commerce tracking;
    - expects the current tracked location;
-   - any HH:MM time in the reply must be one of the fixture tracking times.
+   - any HH:MM time in the reply must come from Commerce tracking;
+   - rejects an invented or incorrect relative collection date.
 
-6. **Ambiguous return**
-   - asks to return one of two cookbooks;
+6. **Ambiguous return is clarified**
+   - asks to return one of two delivered cookbooks;
    - expects clarification;
    - expects no arbitrary return proposal;
    - expects no unnecessary human handoff.
 
 7. **Semantic return reason**
-   - first identifies Ottolenghi Simple without giving a reason;
-   - then says "I just don't cook enough to use it";
-   - expects `changed_mind`;
+   - identifies Ottolenghi Simple and then says "I just don't cook enough to use it";
+   - expects the model to map that free-form reason to `changed_mind`;
+   - expects Commerce eligibility;
    - expects a confirmation card, not execution.
 
 8. **Delayed-order policy**
@@ -96,60 +121,84 @@ The suite contains paired positive and negative behaviors rather than only testi
    - expects the actual threshold date / lost-order wording;
    - expects no executable action.
 
-9. **Explicit human request**
-   - asks for a human;
+9. **Human handoff is terminal**
+   - explicitly asks for a human;
    - model judgment: choose handoff;
    - software guarantee: handoff becomes terminal and no pending action survives.
 
-10. **Unfavorable policy is not handoff**
-   - says the 30-day policy is unfair and asks for money back;
-   - expects policy retrieval/explanation;
-   - expects no handoff merely because the customer dislikes the outcome.
+10. **Unfavorable policy is not a handoff**
+    - says the 30-day return policy is unfair and asks for money back;
+    - expects policy retrieval and explanation;
+    - expects no handoff merely because the customer dislikes the outcome.
 
-11. **Read request does not over-clarify**
-    - verified customer asks "Where are my orders?";
+11. **Verified orders are summarized**
+    - a verified customer asks "Where are my orders?";
     - expects all recent orders in the deterministic structured order summary;
-    - expects concise model prose rather than duplicated order rows/item titles;
+    - expects concise model prose rather than duplicated order rows or item titles;
     - expects no unnecessary "which order?" question.
 
-12. **Order/item count consistency**
+12. **Return item count is consistent**
     - asks to return a book without identifying one;
     - expects order lookup and clarification;
     - rejects copy that confuses the number of orders with the number of items;
-    - expects only delivered books to be offered as current return choices, rather than books that are still in transit.
+    - expects only delivered books to be offered as current return choices.
 
-13. **Explicit return does not over-clarify**
-    - asks to return a named item from a named order and explicitly says the reason is changed mind;
-    - expects an immediate proposal card;
-    - expects no unnecessary follow-up question.
+13. **Verified Jamie return journey**
+    - authenticates as Jamie and reads Jamie's orders;
+    - continues into a Project Hail Mary changed-mind return in the same verified session;
+    - expects no repeated authentication request;
+    - expects a valid return proposal;
+    - software guarantee: the action remains pending until explicit confirmation.
+
+14. **Direct return does not over-clarify**
+    - asks to return a named item from a named order and explicitly gives the changed-mind reason;
+    - expects the return proposal immediately;
+    - expects no unnecessary follow-up question;
+    - software guarantee: the return is not executed before confirmation.
 
 ## Judgment vs guarantees
 
 Every check is tagged as one of:
 
-- **judgment**: the model had to choose or interpret correctly;
+- **judgment**: the model had to choose, interpret, retrieve or communicate correctly;
 - **guarantee**: deterministic application logic should make the condition true.
 
-The final report prints separate totals for both. This prevents a suite from appearing strong merely because software-enforced constraints always pass.
-
-The console report prints per-scenario repeated-run pass rates plus separate totals for model judgment and software guarantees. The README intentionally does not publish placeholder scores as measured evidence.
+The report prints separate totals for both. This prevents the suite from appearing strong merely because software-enforced constraints always pass, and prevents probabilistic model behavior from being described as a hard guarantee.
 
 ## Machine-readable output
+
+To generate a new report:
 
 ```bash
 .venv/bin/python evals/run_evals.py --json-out evals/results.json
 ```
 
-The JSON report includes the UTC run timestamp, configured model, pinned Bookly date, Git commit SHA, whether the working tree was dirty, SHA-256 of the rendered system prompt, repeat count, threshold, aggregate judgment/guarantee counts, and every scenario run. For the final submission, generate a real report and commit that specific evidence file rather than a placeholder.
+The JSON report includes:
 
-With 14 scenarios repeated three times, the prototype evidence set contains **42 sampled conversations**. A clean run should be described as "39 conversations, no failed checks" (plus the exact check totals), not as "100% reliable." Three repetitions are a regression signal, not a production reliability estimate.
+- UTC run timestamp;
+- configured model;
+- pinned Bookly date;
+- Git commit SHA;
+- dirty-working-tree flag;
+- rendered system-prompt SHA-256;
+- repeat count and pass threshold;
+- aggregate judgment and guarantee totals;
+- every scenario, run and individual check.
+
+For the submission, the measured report is committed at:
+
+```text
+evals/evidence-2026-10-03-final.json
+```
+
+With 14 scenarios repeated three times, the evidence set contains **42 sampled conversations**. A clean run should be described as **"42 sampled conversations with no failed checks"**, alongside the exact judgment and guarantee totals. Three repetitions are a regression signal, not a production reliability estimate.
 
 ## CI
 
-The deterministic unit suite tests the eval harness helpers and report semantics, but live model evals are not part of normal GitHub CI because they:
+The deterministic unit suite tests the software guarantees, eval-harness helpers and report semantics. Live model evals are not part of normal GitHub CI because they:
 
 - call a paid external model;
 - are slower;
 - are probabilistic.
 
-Run the live suite before recording, presenting, changing prompts/models, or making a release-like change. In production, a smaller critical set could gate releases while broader suites run periodically and on sampled real conversations.
+Run the live suite before recording, presenting, changing prompts/models or making a release-like change. In production, a smaller critical set could gate releases while broader suites run periodically and against sampled real conversations.

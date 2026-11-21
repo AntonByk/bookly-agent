@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f4ee" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Bookly: books delivered across the UK and beyond</title>
+  <link rel="preload" href="/static/fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <style>
+    @font-face {
+      font-family: "Newsreader";
+      font-style: normal;
+      font-weight: 200 800;
+      font-display: swap;
+      src: url("/static/fonts/newsreader-latin-opsz-normal.woff2") format("woff2-variations");
+    }
+    @font-face {
+      font-family: "Newsreader";
+      font-style: italic;
+      font-weight: 200 800;
+      font-display: swap;
+      src: url("/static/fonts/newsreader-latin-opsz-italic.woff2") format("woff2-variations");
+    }
+
+    :root {
+      --paper: #f7f4ee;
+      --paper-2: #efe9df;
+      --white: #ffffff;
+      --ink: #141210;
+      --ink-2: #2a2622;
+      --ink-soft: #625c55;
+      --ink-faint: #958e85;
+      --line: #e6dfd4;
+      --cobalt: #3158f5;
+      --cobalt-deep: #2443cf;
+      --butter: #f3e4c2;
+      --online: #34c47c;
+      --serif: "Newsreader", "Iowan Old Style", Charter, Georgia, serif;
+      --brand-serif: "Iowan Old Style", Charter, "Bitstream Charter", Baskerville, "Times New Roman", serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --page: min(100% - 64px, 1280px);
+      --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--paper); scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { text-wrap: balance; }
+    button { font: inherit; color: inherit; }
+    svg { display: block; }
+    :focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; border-radius: 8px; }
+    .wrap { width: var(--page); margin: 0 auto; }
+
+    svg.line { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ---------- Announcement bar ---------- */
+    .announce { background: var(--ink); color: #e9e2d6; font-size: 13.5px; }
+    .announce .wrap { display: flex; justify-content: center; gap: 48px; padding: 9px 0; }
+    .announce span { display: inline-flex; align-items: center; gap: 8px; }
+    .announce svg { width: 16px; height: 16px; opacity: .8; }
+
+    /* ---------- Header ---------- */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(247, 244, 238, 0.86);
+      backdrop-filter: saturate(1.4) blur(14px);
+      -webkit-backdrop-filter: saturate(1.4) blur(14px);
+      border-bottom: 1px solid rgba(230, 223, 212, 0.8);
+    }
+    .header-row { display: flex; align-items: center; gap: 32px; height: 76px; }
+    .brand-lockup { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; flex: none; }
+    .brand-mark { position: relative; width: 34px; height: 34px; border-radius: 11px; background: var(--ink); overflow: hidden; flex: none; }
+    .brand-mark span { position: absolute; top: 8px; bottom: 8px; width: 8px; border: 1.8px solid #f6efe4; }
+    .brand-mark span:first-child { left: 8px; border-left: 0; border-radius: 1px 6px 6px 1px; }
+    .brand-mark span:last-child { right: 8px; border-right: 0; border-radius: 6px 1px 1px 6px; }
+    .brand { font-family: var(--brand-serif); font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+
+    .search {
+      flex: 1;
+      max-width: 560px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 46px;
+      padding: 0 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink-faint);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .search:focus-within { border-color: var(--cobalt); box-shadow: 0 0 0 4px rgba(49, 88, 245, 0.12); }
+    .search svg { width: 18px; height: 18px; flex: none; }
+    .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 15px; color: var(--ink); }
+
+    .tools { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+    .tool {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .tool:hover { background: rgba(20, 18, 16, 0.06); }
+    .tool svg { width: 21px; height: 21px; }
+    .basket-count {
+      position: absolute;
+      top: 4px;
+      right: 2px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--cobalt);
+      border-radius: 999px;
+      transition: transform 200ms ease;
+    }
+    .basket-count.bump { transform: scale(1.3); }
+
+    .cat-nav { border-top: 1px solid rgba(230, 223, 212, 0.8); }
+    .cat-nav .wrap { display: flex; gap: 30px; height: 46px; align-items: center; font-size: 15px; overflow-x: auto; scrollbar-width: none; }
+    .cat-nav a { text-decoration: none; color: var(--ink-soft); white-space: nowrap; }
+    .cat-nav a:hover { color: var(--ink); }
+    .cat-nav a.highlight { color: var(--cobalt); font-weight: 600; }
+
+    /* ---------- Covers ---------- */
+    .cover {
+      position: relative;
+      container-type: inline-size;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      overflow: hidden;
+      border-radius: 2px 5px 5px 2px;
+      background: var(--bg, #ddd);
+      box-shadow: 0 1px 2px rgba(20, 15, 10, 0.12), 0 14px 26px -12px rgba(20, 15, 10, 0.45);
+    }
+    .cover-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background-image: var(--grain);
+      background-size: 180px;
+      opacity: .16;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+    .cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.26) 0%, rgba(0,0,0,.04) 2.6%, rgba(255,255,255,.22) 3.6%, rgba(255,255,255,0) 7.5%),
+        linear-gradient(115deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 38%);
+    }
+    .ct, .ca, .cs { position: absolute; z-index: 2; }
+    .ct { font-family: var(--serif); line-height: .95; letter-spacing: -0.01em; }
+    .ca { font-family: var(--sans); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 5.2cqw; }
+    .cs { font-family: var(--serif); font-style: italic; font-size: 5.6cqw; line-height: 1.2; }
+
+    .t-orchard .ct { left: 10cqw; top: 9cqw; font-size: 16cqw; font-weight: 600; color: #f3ead8; }
+    .t-orchard .ca { left: 10cqw; bottom: 8cqw; color: #e2b04a; }
+    .t-hours .ct { left: 0; right: 0; top: 11cqw; text-align: center; font-size: 17cqw; font-style: italic; font-weight: 400; color: #efe6d3; }
+    .t-hours .ca { left: 0; right: 0; bottom: 8cqw; text-align: center; color: #c8cfdf; }
+    .t-lisbon .ct { left: 10cqw; top: 9cqw; font-size: 14cqw; font-weight: 700; color: #1f3a8a; }
+    .t-lisbon .cs { left: 10cqw; top: 42cqw; color: #3a4a7a; width: 70cqw; }
+    .t-lisbon .ca { left: 10cqw; bottom: 8cqw; color: #1f3a8a; }
+    .t-tide .ct { left: 9cqw; top: 10cqw; font-family: var(--sans); font-size: 12.5cqw; font-weight: 800; letter-spacing: -0.04em; line-height: .92; color: #23384f; }
+    .t-tide .ca { right: 9cqw; top: 12cqw; color: #23384f; writing-mode: vertical-rl; }
+    .t-wonder .ct { left: 0; right: 0; top: 16cqw; text-align: center; font-size: 15cqw; font-style: italic; font-weight: 500; color: #7a2e2e; }
+    .t-wonder .ca { left: 0; right: 0; bottom: 14cqw; text-align: center; color: #7a2e2e; }
+    .t-fire .ct { left: 0; right: 0; top: 10cqw; text-align: center; font-family: var(--sans); font-size: 18cqw; font-weight: 900; letter-spacing: -0.03em; color: #f6efe4; }
+    .t-fire .cs { left: 0; right: 0; top: 31cqw; text-align: center; color: #e9b98a; }
+    .t-fire .ca { left: 0; right: 0; bottom: 9cqw; text-align: center; color: #f6efe4; }
+    .t-moons .ct { left: 10cqw; bottom: 16cqw; font-size: 17cqw; font-weight: 700; color: #3a2420; }
+    .t-moons .ca { left: 10cqw; bottom: 8cqw; color: #3a2420; }
+    .t-harbour .ca { left: 0; right: 0; top: 10cqw; text-align: center; font-size: 7.4cqw; color: #ffffff; letter-spacing: .16em; }
+    .t-harbour .ct { left: 0; right: 0; bottom: 14cqw; text-align: center; font-family: var(--sans); font-size: 17cqw; font-weight: 900; letter-spacing: .06em; color: #f2c14e; }
+    .t-harbour .cs { left: 0; right: 0; bottom: 8cqw; text-align: center; font-family: var(--sans); font-style: normal; font-size: 4.4cqw; color: #9aa3b5; letter-spacing: .04em; }
+    .t-northfield .ct { left: 0; right: 0; top: 14cqw; text-align: center; font-size: 17cqw; font-weight: 400; color: #1d2a33; }
+    .t-northfield .ca { left: 0; right: 0; bottom: 9cqw; text-align: center; color: #1d2a33; }
+    .t-lemon .ct { left: 10cqw; top: 9cqw; font-size: 15cqw; font-style: italic; font-weight: 700; color: #2d3a1f; }
+    .t-lemon .ca { left: 10cqw; bottom: 8cqw; color: #2d3a1f; }
+    .t-longway .ct { left: 10cqw; top: 10cqw; font-size: 14cqw; font-weight: 600; color: #f2e7cf; }
+    .t-longway .ca { left: 10cqw; bottom: 8cqw; color: #f2e7cf; }
+
+    /* ---------- Hero ---------- */
+    .hero { padding: 28px 0 0; }
+    .hero-panel {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+      align-items: center;
+      gap: 40px;
+      min-height: 560px;
+      padding: 64px 72px;
+      background:
+        radial-gradient(circle at 78% 42%, rgba(255,255,255,.16), transparent 42%),
+        linear-gradient(135deg, #3a63ff 0%, var(--cobalt) 45%, var(--cobalt-deep) 100%);
+      color: var(--white);
+      border-radius: 32px;
+      isolation: isolate;
+    }
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image: var(--grain);
+      background-size: 180px;
+      opacity: .12;
+      mix-blend-mode: overlay;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .pill svg { width: 15px; height: 15px; }
+    .hero h1 {
+      margin-top: 22px;
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: clamp(56px, 6.6vw, 92px);
+      line-height: .95;
+      letter-spacing: -0.035em;
+    }
+    .hero .byline { margin-top: 14px; font-size: 19px; color: rgba(255,255,255,.86); }
+    .hero .blurb { margin-top: 22px; max-width: 30em; font-size: 18px; line-height: 1.55; color: rgba(255,255,255,.9); }
+    .hero .buy { margin-top: 34px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .price-tag { margin-right: 10px; }
+    .price-tag strong { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+    .price-tag span { margin-left: 8px; font-size: 15px; color: rgba(255,255,255,.75); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 50px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 999px;
+      font-size: 15.5px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+    .btn-white { background: var(--white); color: var(--ink); }
+    .btn-white:hover, .btn-white.added { background: #e8edff; }
+    .btn-ghost-light { background: rgba(255,255,255,.12); color: var(--white); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+    .btn-ghost-light:hover { background: rgba(255,255,255,.2); }
+    .btn-ink { background: var(--ink); color: #f6efe4; }
+    .btn-ink:hover { background: var(--ink-2); }
+    .btn-cream { background: #f6efe4; color: var(--ink); }
+    .btn-cream:hover { background: var(--white); }
+
+    /* 3D book */
+    .book-stage { position: relative; display: grid; place-items: center; perspective: 1800px; min-height: 480px; animation: fade-in 700ms ease both; }
+    .book-stage::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 12%;
+      bottom: 6px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(10, 20, 70, .55), transparent);
+      filter: blur(6px);
+    }
+    .book3d {
+      --w: 290px;
+      --h: 435px;
+      --t: 44px;
+      position: relative;
+      z-index: 1;
+      width: var(--w);
+      height: var(--h);
+      transform-style: preserve-3d;
+      transform: rotateY(-28deg) rotateX(3deg);
+      animation: arrive 900ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    .book3d > div { position: absolute; backface-visibility: hidden; }
+    .book3d .front { inset: 0; transform: translateZ(calc(var(--t) / 2)); }
+    .book3d .front .cover { height: 100%; box-shadow: none; border-radius: 2px 6px 6px 2px; }
+    .book3d .back { inset: 0; background: #163024; border-radius: 6px 2px 2px 6px; transform: rotateY(180deg) translateZ(calc(var(--t) / 2)); }
+    .book3d .pages {
+      top: 5px;
+      bottom: 5px;
+      left: calc(50% - (var(--t) - 6px) / 2);
+      width: calc(var(--t) - 6px);
+      transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 5px));
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.12), transparent 30%, transparent 70%, rgba(0,0,0,.18)),
+        repeating-linear-gradient(90deg, #fbf8f1 0 1.5px, #e4dccd 1.5px 2.5px);
+    }
+    .book3d .spine {
+      top: 0;
+      bottom: 0;
+      left: calc(50% - var(--t) / 2);
+      width: var(--t);
+      background: linear-gradient(90deg, #12281c, #1f3b2d 40%, #163024);
+      transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+    }
+    .book3d .top {
+      left: 0;
+      right: 0;
+      top: calc(50% - var(--t) / 2);
+      height: var(--t);
+      background: repeating-linear-gradient(0deg, #fbf8f1 0 1.5px, #e4dccd 1.5px 2.5px);
+      transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
+    }
+    @keyframes arrive {
+      from { transform: translateY(26px) rotateY(-44deg) rotateX(3deg); }
+      to { transform: rotateY(-28deg) rotateX(3deg); }
+    }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .sticker {
+      position: absolute;
+      z-index: 2;
+      right: 8%;
+      top: 9%;
+      width: 112px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 50%;
+      background: #f2c14e;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.05;
+      transform: rotate(10deg);
+      box-shadow: 0 10px 24px -10px rgba(10, 20, 70, .6);
+    }
+
+    /* ---------- Sections ---------- */
+    .section { padding: 88px 0 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .section-head h2 { font-family: var(--serif); font-weight: 500; font-size: 42px; line-height: 1.05; letter-spacing: -0.03em; }
+    .section-head p { margin-top: 8px; color: var(--ink-soft); font-size: 16px; }
+    .head-actions { display: flex; align-items: center; gap: 10px; }
+    .arrow-btn {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--white);
+      cursor: pointer;
+    }
+    .arrow-btn:hover { border-color: #cfc5b6; }
+    .arrow-btn svg { width: 18px; height: 18px; }
+
+    /* Categories */
+    .cats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+    .cat {
+      position: relative;
+      overflow: hidden;
+      height: 200px;
+      padding: 20px;
+      border-radius: 20px;
+      background: var(--tint);
+      text-decoration: none;
+      transition: transform 200ms ease;
+    }
+    .cat:hover { transform: translateY(-3px); }
+    .cat h3 { position: relative; z-index: 2; font-family: var(--serif); font-weight: 500; font-size: 22px; line-height: 1.1; letter-spacing: -0.01em; max-width: 7em; }
+    .cat .minis { position: absolute; right: 14px; bottom: -26px; display: flex; align-items: flex-end; }
+    .cat .minis .cover { width: 74px; box-shadow: 0 10px 18px -8px rgba(20, 15, 10, .45); }
+    .cat .minis .cover:first-child { transform: rotate(-8deg) translateX(14px); }
+    .cat .minis .cover:last-child { transform: rotate(6deg); z-index: 1; }
+    .cat .minis .cover:only-child { transform: rotate(6deg); width: 84px; }
+    .giftcard {
+      position: absolute;
+      right: -18px;
+      bottom: 18px;
+      width: 150px;
+      height: 94px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3a3530, var(--ink));
+      color: #f6efe4;
+      transform: rotate(-8deg);
+      box-shadow: 0 14px 24px -10px rgba(20, 15, 10, .5);
+    }
+    .giftcard .brand-mark { width: 24px; height: 24px; border-radius: 8px; background: #4a443e; }
+    .giftcard .brand-mark span { top: 6px; bottom: 6px; width: 5px; border-width: 1.4px; }
+    .giftcard .brand-mark span:first-child { left: 6px; }
+    .giftcard .brand-mark span:last-child { right: 6px; }
+    .giftcard strong { font-family: var(--brand-serif); font-size: 18px; }
+
+    /* Product rail */
+    .rail {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: calc((100% - 4 * 24px) / 5);
+      gap: 24px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      list-style: none;
+      margin: 0;
+      padding: 0 0 8px;
+    }
+    .rail::-webkit-scrollbar { display: none; }
+    .product { scroll-snap-align: start; }
+    .product-media {
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1 / 1.08;
+      border-radius: 18px;
+      background: var(--paper-2);
+    }
+    .product-media .cover { width: 58%; }
+    .rank {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--white);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .tag {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #f6efe4;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .product h3 { margin-top: 16px; font-family: var(--serif); font-size: 20px; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+    .product .author { margin-top: 2px; color: var(--ink-soft); font-size: 15px; }
+    .product .row { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .product .price { font-size: 16px; font-weight: 700; }
+    .product .price span { margin-left: 6px; color: var(--ink-faint); font-weight: 400; font-size: 14px; }
+    .add {
+      flex: none;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+    .add svg { width: 19px; height: 19px; grid-area: 1 / 1; }
+    .add .icon-check { display: none; }
+    .add:hover { background: var(--ink); color: #f6efe4; }
+    .add.added { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
+    .add.added .icon-bag { display: none; }
+    .add.added .icon-check { display: block; }
+
+    /* Cookbook feature */
+    .feature {
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 48px;
+      overflow: hidden;
+      padding: 0 72px 0 40px;
+      min-height: 420px;
+      border-radius: 32px;
+      background: var(--butter);
+    }
+    .feature::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image: var(--grain);
+      background-size: 180px;
+      opacity: .14;
+      mix-blend-mode: multiply;
+    }
+    .fan { position: relative; height: 420px; }
+    .fan .cover { position: absolute; width: 190px; bottom: 50px; }
+    .fan .cover:nth-child(1) { left: 6%; transform: rotate(-10deg); }
+    .fan .cover:nth-child(2) { left: 29%; bottom: 74px; transform: rotate(-1deg); z-index: 2; width: 206px; }
+    .fan .cover:nth-child(3) { left: 53%; transform: rotate(9deg); z-index: 1; }
+    .feature h2 { font-family: var(--serif); font-weight: 500; font-size: 48px; line-height: 1.02; letter-spacing: -0.03em; }
+    .feature p { margin-top: 18px; max-width: 28em; font-size: 17px; color: #5a4e3c; }
+    .feature .btn { margin-top: 30px; }
+
+    /* Help band */
+    .help {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+      align-items: center;
+      gap: 64px;
+      padding: 64px 72px;
+      border-radius: 32px;
+      background: var(--ink);
+      color: #f6efe4;
+    }
+    .help h2 { font-family: var(--serif); font-weight: 500; font-size: 52px; line-height: 1; letter-spacing: -0.03em; }
+    .help p { margin-top: 20px; max-width: 29em; font-size: 18px; color: #c9c1b5; }
+    .help .points { margin: 26px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; color: #e9e2d6; font-size: 16px; }
+    .help .points li { display: flex; align-items: center; gap: 12px; }
+    .help .points svg { width: 20px; height: 20px; color: #8ea2ff; flex: none; }
+    .help .btn { margin-top: 34px; }
+
+    .mini-chat { border-radius: 24px; background: #fffdf9; color: var(--ink); overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .6); }
+    .mini-chat header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .mini-chat header strong { font-size: 15px; display: block; line-height: 1.2; }
+    .mini-chat header small { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); }
+    .mini-chat header small::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--online); }
+    .mini-chat .body { display: flex; flex-direction: column; gap: 10px; padding: 20px; font-size: 15px; line-height: 1.45; }
+    .msg { max-width: 82%; padding: 12px 16px; border-radius: 18px; }
+    .msg.you { align-self: flex-end; background: var(--cobalt); color: #fff; border-bottom-right-radius: 6px; }
+    .msg.bot { align-self: flex-start; background: #f1ece4; border-bottom-left-radius: 6px; }
+    .typing { align-self: flex-start; display: flex; gap: 5px; padding: 14px 16px; background: #f1ece4; border-radius: 18px; border-bottom-left-radius: 6px; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: #a39b90; animation: blink 1.2s infinite ease-in-out; }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .35; } 40% { opacity: 1; } }
+    .mini-chat .composer { margin: 0 16px 16px; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 7px 0 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-faint); font-size: 14px; }
+    .mini-chat .composer span:last-child { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; color: #fff; }
+    .mini-chat .composer svg { width: 16px; height: 16px; }
+
+    /* Footer */
+    .site-footer { margin-top: 96px; border-top: 1px solid var(--line); }
+    .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 40px; padding: 56px 0 40px; }
+    .footer-grid h4 { margin: 0 0 14px; font-size: 14px; font-weight: 700; }
+    .footer-grid ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 15px; color: var(--ink-soft); }
+    .footer-grid a { text-decoration: none; }
+    .footer-grid a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+    .footer-about p { margin-top: 14px; max-width: 26em; color: var(--ink-soft); font-size: 15px; }
+    .footer-base { display: flex; justify-content: space-between; gap: 24px; padding: 20px 0 40px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 13.5px; }
+
+    /* Chat launcher */
+    .launcher-wrap { position: fixed; right: 28px; bottom: 28px; z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+    .greeting {
+      position: relative;
+      max-width: 290px;
+      padding: 16px 40px 16px 18px;
+      border-radius: 20px 20px 6px 20px;
+      background: var(--white);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.45;
+      box-shadow: 0 20px 44px -18px rgba(20, 15, 10, .45), 0 0 0 1px rgba(20, 15, 10, .05);
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+      transform-origin: bottom right;
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms ease;
+    }
+    .greeting.show { opacity: 1; transform: none; pointer-events: auto; }
+    .greeting-link { display: block; color: inherit; text-decoration: none; }
+    .greeting strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .greeting-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink-faint);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .greeting-close:hover { background: rgba(20, 18, 16, .06); color: var(--ink); }
+    .launcher {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 18px 40px -12px rgba(20, 18, 16, .6);
+      transition: transform 180ms ease;
+    }
+    .launcher:hover { transform: scale(1.06); }
+    .launcher .brand-mark { width: 34px; height: 34px; background: transparent; }
+    .launcher-dot { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--online); box-shadow: 0 0 0 3px var(--paper); }
+
+    .chat-veil {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+      background: #f4f0e8;
+      clip-path: circle(0 at var(--x, 100%) var(--y, 100%));
+      transition: clip-path 480ms cubic-bezier(.6, 0, .3, 1);
+    }
+    .chat-veil.is-open { clip-path: circle(150vmax at var(--x, 100%) var(--y, 100%)); }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1180px) {
+      .cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .rail { grid-auto-columns: calc((100% - 3 * 24px) / 4); }
+      .hero-panel { padding: 56px; }
+      .help { padding: 56px; gap: 40px; }
+    }
+    @media (max-width: 960px) {
+      .search { display: none; }
+      .hero-panel { grid-template-columns: 1fr; padding: 48px 36px 24px; }
+      .book-stage { min-height: 420px; }
+      .book3d { --w: 230px; --h: 345px; --t: 36px; }
+      .rail { grid-auto-columns: calc((100% - 2 * 20px) / 3); gap: 20px; }
+      .feature { grid-template-columns: 1fr; padding: 40px 36px 0; }
+      .feature .fan { order: 2; height: 320px; }
+      .fan .cover { width: 150px; }
+      .fan .cover:nth-child(2) { width: 164px; }
+      .help { grid-template-columns: 1fr; padding: 44px 36px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .announce .wrap span:nth-child(3) { display: none; }
+    }
+    @media (max-width: 640px) {
+      :root { --page: min(100% - 32px, 1280px); }
+      .announce .wrap span:nth-child(2) { display: none; }
+      .tool .tool-label { display: none; }
+      .hero-panel { border-radius: 24px; padding: 36px 24px 16px; }
+      .sticker { display: none; }
+      .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cat { height: 170px; }
+      .rail { grid-auto-columns: 72%; }
+      .section-head h2 { font-size: 34px; }
+      .feature h2, .help h2 { font-size: 38px; }
+      .fan .cover { width: 118px; }
+      .fan .cover:nth-child(2) { width: 130px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-base { flex-direction: column; }
+      .launcher-wrap { right: 16px; bottom: 16px; }
+      .greeting { max-width: 240px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .book3d, .book-stage { animation: none; }
+      .typing span { animation: none; opacity: .6; }
+      .greeting, .chat-veil, .cat, .launcher, .btn, .add, .basket-count { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Cover artwork: original illustrations for fictional books -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="azulejo" width="40" height="40" patternUnits="userSpaceOnUse">
+        <rect width="40" height="40" fill="#f7f3ea" />
+        <circle cx="20" cy="20" r="10" fill="#2a4fd6" />
+        <circle cx="20" cy="20" r="4" fill="#f7f3ea" />
+        <circle cx="0" cy="0" r="7" fill="#2a4fd6" /><circle cx="40" cy="0" r="7" fill="#2a4fd6" />
+        <circle cx="0" cy="40" r="7" fill="#2a4fd6" /><circle cx="40" cy="40" r="7" fill="#2a4fd6" />
+        <path d="M20 2 V8 M20 32 V38 M2 20 H8 M32 20 H38" stroke="#2a4fd6" stroke-width="1.6" />
+        <rect width="40" height="40" fill="none" stroke="#d5dcf5" stroke-width="1" />
+      </pattern>
+      <radialGradient id="flame" cx=".5" cy=".72" r=".68">
+        <stop offset="0" stop-color="#fde49a" />
+        <stop offset=".34" stop-color="#f3a445" />
+        <stop offset=".7" stop-color="#cf512c" />
+        <stop offset="1" stop-color="#6b2118" />
+      </radialGradient>
+      <filter id="papercut" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#5a2b25" flood-opacity=".28" />
+      </filter>
+    </defs>
+
+    <symbol id="art-orchard" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#1f3b2d" />
+      <circle cx="140" cy="126" r="44" fill="#e2b04a" />
+      <path d="M0 214 C60 196 130 196 200 210 V300 H0 Z" fill="#2b4f3d" />
+      <g stroke="#2a2118" stroke-width="3" stroke-linecap="round">
+        <path d="M28 214 v-22" /><path d="M70 210 v-24" /><path d="M112 208 v-24" /><path d="M154 210 v-24" /><path d="M194 214 v-20" />
+      </g>
+      <g fill="#477b5d">
+        <circle cx="28" cy="188" r="17" /><circle cx="70" cy="183" r="19" /><circle cx="112" cy="181" r="18" /><circle cx="154" cy="183" r="19" /><circle cx="194" cy="190" r="16" />
+      </g>
+      <g fill="#e2b04a">
+        <circle cx="22" cy="184" r="2.6" /><circle cx="34" cy="192" r="2.3" /><circle cx="64" cy="178" r="2.6" /><circle cx="78" cy="189" r="2.3" />
+        <circle cx="106" cy="176" r="2.6" /><circle cx="120" cy="186" r="2.3" /><circle cx="148" cy="178" r="2.6" /><circle cx="162" cy="189" r="2.3" /><circle cx="190" cy="186" r="2.3" />
+      </g>
+      <path d="M0 248 C70 230 140 232 200 244 V300 H0 Z" fill="#163024" />
+    </symbol>
+
+    <symbol id="art-hours" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#17213a" />
+      <g fill="#efe6d3" opacity=".75">
+        <circle cx="30" cy="96" r="1.2" /><circle cx="72" cy="112" r="1" /><circle cx="104" cy="92" r="1.3" /><circle cx="58" cy="132" r="1" /><circle cx="176" cy="128" r="1.1" /><circle cx="22" cy="140" r="1" />
+      </g>
+      <circle cx="150" cy="104" r="20" fill="#efe6d3" /><circle cx="159" cy="97" r="18" fill="#17213a" />
+      <rect x="34" y="166" width="132" height="134" fill="#21304f" />
+      <rect x="34" y="166" width="132" height="6" fill="#2b3c61" />
+      <g fill="#2c3d60">
+        <rect x="50" y="186" width="16" height="20" /><rect x="80" y="186" width="16" height="20" /><rect x="110" y="186" width="16" height="20" /><rect x="140" y="186" width="10" height="20" />
+        <rect x="50" y="218" width="16" height="20" /><rect x="80" y="218" width="16" height="20" /><rect x="140" y="218" width="10" height="20" />
+        <rect x="50" y="250" width="16" height="20" /><rect x="80" y="250" width="16" height="20" /><rect x="110" y="250" width="16" height="20" /><rect x="140" y="250" width="10" height="20" />
+      </g>
+      <circle cx="118" cy="228" r="22" fill="#f2c14e" opacity=".16" />
+      <rect x="110" y="218" width="16" height="20" fill="#f2c14e" />
+    </symbol>
+
+    <symbol id="art-lisbon" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#f4eedf" />
+      <rect y="160" width="200" height="96" fill="url(#azulejo)" />
+      <ellipse cx="146" cy="162" rx="30" ry="23" fill="#f2c94c" transform="rotate(-18 146 162)" />
+      <ellipse cx="146" cy="162" rx="30" ry="23" fill="none" stroke="#d9a92a" stroke-width="1.4" transform="rotate(-18 146 162)" />
+      <path d="M166 142 q14 -16 28 -8 q-10 16 -28 8 z" fill="#3f7a4a" />
+    </symbol>
+
+    <symbol id="art-tide" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#d6e2df" />
+      <circle cx="150" cy="112" r="20" fill="#f4efe4" />
+      <path d="M118 178 h38 l-7 9 h-24 z" fill="#23384f" />
+      <path d="M137 175 V136 L157 172 Z" fill="#f4efe4" stroke="#23384f" stroke-width="1" />
+      <path d="M0 186 C30 176 60 196 100 186 S170 176 200 186 V300 H0 Z" fill="#9fbcba" />
+      <path d="M0 212 C40 202 70 220 110 210 S170 202 200 212 V300 H0 Z" fill="#6e9597" />
+      <path d="M0 240 C40 230 80 250 120 238 S180 230 200 238 V300 H0 Z" fill="#41676f" />
+      <path d="M0 268 C50 258 90 276 130 266 S180 260 200 268 V300 H0 Z" fill="#23384f" />
+    </symbol>
+
+    <symbol id="art-wonder" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#f6efe4" />
+      <rect x="12" y="12" width="176" height="276" fill="none" stroke="#7a2e2e" stroke-width="1.4" />
+      <g fill="none" stroke="#7a2e2e" stroke-width="1.6" stroke-linecap="round">
+        <path d="M100 252 C97 224 103 196 100 160" />
+        <path d="M100 230 C86 222 76 222 64 212" /><path d="M100 208 C114 200 124 200 136 190" /><path d="M100 186 C88 180 82 176 74 166" />
+      </g>
+      <g fill="#7a2e2e">
+        <ellipse cx="60" cy="209" rx="10" ry="4.2" transform="rotate(32 60 209)" />
+        <ellipse cx="140" cy="187" rx="10" ry="4.2" transform="rotate(-36 140 187)" />
+        <ellipse cx="71" cy="162" rx="9" ry="3.8" transform="rotate(52 71 162)" />
+        <ellipse cx="84" cy="219" rx="7" ry="3" transform="rotate(-20 84 219)" />
+        <ellipse cx="117" cy="199" rx="7" ry="3" transform="rotate(20 117 199)" />
+      </g>
+      <circle cx="100" cy="152" r="8" fill="#d9a441" />
+      <circle cx="100" cy="152" r="3" fill="#7a2e2e" />
+    </symbol>
+
+    <symbol id="art-fire" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#211c19" />
+      <path d="M100 108 C126 142 150 162 146 202 C143 232 122 250 100 250 C78 250 57 232 54 202 C51 172 74 152 84 132 C88 148 94 154 100 156 C104 138 100 122 100 108 Z" fill="url(#flame)" />
+      <g fill="#f3a445">
+        <circle cx="66" cy="132" r="1.6" opacity=".7" /><circle cx="138" cy="120" r="1.3" opacity=".6" /><circle cx="126" cy="98" r="1.1" opacity=".5" /><circle cx="78" cy="106" r="1" opacity=".5" />
+      </g>
+      <g stroke="#3b332e" stroke-width="3.4" stroke-linecap="round">
+        <path d="M34 262 H166" /><path d="M42 272 H158" />
+      </g>
+    </symbol>
+
+    <symbol id="art-moons" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#f3cfc8" />
+      <g filter="url(#papercut)">
+        <circle cx="74" cy="100" r="50" fill="#fff6ef" />
+        <circle cx="140" cy="148" r="38" fill="#e79b90" />
+        <circle cx="160" cy="62" r="13" fill="#fff6ef" />
+        <path d="M0 220 C50 196 120 206 200 186 V300 H0 Z" fill="#d97d71" />
+      </g>
+      <g fill="#fff6ef"><circle cx="34" cy="176" r="2" /><circle cx="120" cy="88" r="1.6" /><circle cx="180" cy="118" r="2" /></g>
+    </symbol>
+
+    <symbol id="art-harbour" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#0d0f13" />
+      <rect y="176" width="200" height="124" fill="#11151c" />
+      <path d="M0 176 V156 h18 v-10 h14 v20 h16 v-34 h12 v34 h22 v-14 h18 v14 h28 v-26 h12 v26 h20 v-10 h40 V176 Z" fill="#1b212b" />
+      <g fill="#f2c14e">
+        <rect x="52" y="140" width="3" height="4" /><rect x="52" y="152" width="3" height="4" opacity=".6" /><rect x="132" y="156" width="3" height="4" /><rect x="164" y="166" width="3" height="4" opacity=".7" /><rect x="22" y="154" width="3" height="4" opacity=".5" />
+      </g>
+      <g stroke="#f2c14e" stroke-linecap="round" stroke-width="2.2">
+        <path d="M53.5 186 v34" opacity=".55" /><path d="M53.5 226 v12" opacity=".3" />
+        <path d="M133.5 186 v26" opacity=".5" /><path d="M133.5 218 v10" opacity=".25" />
+        <path d="M165.5 186 v18" opacity=".4" />
+      </g>
+    </symbol>
+
+    <symbol id="art-northfield" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#eef1ef" />
+      <path d="M0 196 C60 176 120 182 200 166 V300 H0 Z" fill="#dfe6e3" />
+      <path d="M0 236 C70 220 140 228 200 212 V300 H0 Z" fill="#cfd9d5" />
+      <g fill="#1d2a33">
+        <circle cx="121" cy="194" r="3.2" />
+        <rect x="118.5" y="197" width="5" height="15" rx="2" />
+      </g>
+      <rect x="117" y="199" width="8" height="3" fill="#c0392b" />
+      <g fill="none" stroke="#1d2a33" stroke-width="1.2" stroke-linecap="round">
+        <path d="M58 110 q4 -4 8 0 q4 -4 8 0" /><path d="M82 98 q3 -3 6 0 q3 -3 6 0" />
+      </g>
+    </symbol>
+
+    <symbol id="art-lemon" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#f6d35b" />
+      <g>
+        <circle cx="70" cy="186" r="36" fill="#fff7d6" />
+        <circle cx="70" cy="186" r="31" fill="#f9e27a" />
+        <g stroke="#fff7d6" stroke-width="2.4"><path d="M70 155 V217" /><path d="M39 186 H101" /><path d="M48 164 L92 208" /><path d="M92 164 L48 208" /></g>
+        <circle cx="70" cy="186" r="5" fill="#fff7d6" />
+      </g>
+      <g>
+        <circle cx="146" cy="236" r="26" fill="#fff7d6" />
+        <circle cx="146" cy="236" r="22" fill="#f9e27a" />
+        <g stroke="#fff7d6" stroke-width="2"><path d="M146 214 V258" /><path d="M124 236 H168" /><path d="M131 221 L161 251" /><path d="M161 221 L131 251" /></g>
+      </g>
+      <path d="M132 168 C140 150 150 132 170 118" fill="none" stroke="#4b6b33" stroke-width="2" stroke-linecap="round" />
+      <g fill="#4b6b33">
+        <ellipse cx="140" cy="152" rx="5" ry="2.4" transform="rotate(-40 140 152)" /><ellipse cx="148" cy="140" rx="5" ry="2.4" transform="rotate(30 148 140)" />
+        <ellipse cx="157" cy="129" rx="5" ry="2.4" transform="rotate(-40 157 129)" /><ellipse cx="166" cy="121" rx="4.4" ry="2.2" transform="rotate(30 166 121)" />
+      </g>
+    </symbol>
+
+    <symbol id="art-longway" viewBox="0 0 200 300">
+      <rect width="200" height="300" fill="#2e6b6b" />
+      <circle cx="152" cy="118" r="16" fill="#f2c14e" />
+      <path d="M0 168 C50 148 100 158 200 138 V300 H0 Z" fill="#3a7d78" />
+      <path d="M0 212 C60 192 130 208 200 188 V300 H0 Z" fill="#245b5a" />
+      <path d="M96 300 C112 262 62 244 92 216 C116 196 150 192 140 160" fill="none" stroke="#f2e7cf" stroke-width="14" stroke-linecap="round" />
+      <path d="M96 300 C112 262 62 244 92 216 C116 196 150 192 140 160" fill="none" stroke="#2e6b6b" stroke-width="1.6" stroke-dasharray="5 6" />
+    </symbol>
+  </svg>
+
+  <div class="announce">
+    <div class="wrap">
+      <span><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17" cy="17.5" r="1.6" /></svg>UK delivery in 3 to 5 working days</span>
+      <span><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5" /><path d="M4 4v4.5h4.5" /></svg>Returns within 30 days of delivery</span>
+      <span><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v10H9l-5 4z" /></svg>Help with any order, day or night</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand-lockup" href="/store" aria-label="Bookly home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
+        <span class="brand">Bookly</span>
+      </a>
+      <form class="search" role="search" action="#" onsubmit="return false">
+        <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
+        <input type="search" placeholder="Search by title, author or ISBN" aria-label="Search Bookly" />
+      </form>
+      <nav class="tools" aria-label="Account and help">
+        <a class="tool" href="/" data-open-chat>
+          <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4" /><circle cx="12" cy="16.9" r=".6" fill="currentColor" /></svg>
+          <span class="tool-label">Help</span>
+        </a>
+        <button class="tool" type="button">
+          <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" /><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4" /></svg>
+          <span class="tool-label">Sign in</span>
+        </button>
+        <button class="tool" type="button" aria-label="Basket">
+          <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
+          <span class="basket-count" id="basket-count" aria-live="polite">0</span>
+        </button>
+      </nav>
+    </div>
+    <div class="cat-nav">
+      <div class="wrap">
+        <a href="#bestsellers">Bestsellers</a>
+        <a href="#bestsellers">New releases</a>
+        <a href="#categories">Fiction</a>
+        <a href="#categories">Crime and thrillers</a>
+        <a href="#cookbooks">Cookbooks</a>
+        <a href="#categories">Children’s</a>
+        <a href="#categories">Non-fiction</a>
+        <a href="#categories">Gift cards</a>
+        <a class="highlight" href="#bestsellers">Winter reads</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-panel">
+          <div>
+            <span class="pill"><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" /></svg>Book of the month</span>
+            <h1>The Salt Orchard</h1>
+            <p class="byline">by Mara Ellison</p>
+            <p class="blurb">Three sisters, one failing orchard on the Kent coast, and the summer that decides whether the family keeps it. Our booksellers’ favourite debut of the year.</p>
+            <div class="buy">
+              <span class="price-tag"><strong>£16.99</strong><span>Hardback</span></span>
+              <button class="btn btn-white" type="button" data-add>Add to basket</button>
+              <a class="btn btn-ghost-light" href="#bestsellers">Explore bestsellers</a>
+            </div>
+          </div>
+          <div class="book-stage" aria-hidden="true">
+            <div class="book3d">
+              <div class="back"></div>
+              <div class="spine"></div>
+              <div class="pages"></div>
+              <div class="top"></div>
+              <div class="front">
+                <div class="cover t-orchard" style="--bg:#1f3b2d"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-orchard" /></svg><span class="ct">The Salt<br />Orchard</span><span class="ca">Mara Ellison</span></div>
+              </div>
+            </div>
+            <div class="sticker">Signed<br />copies</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="categories" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Shop by category</h2>
+        </div>
+        <div class="cats">
+          <a class="cat" href="#bestsellers" style="--tint:#dfe8de">
+            <h3>Fiction</h3>
+            <div class="minis" aria-hidden="true">
+              <div class="cover t-northfield" style="--bg:#eef1ef"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-northfield" /></svg><span class="ct">Northfield</span><span class="ca">June Park</span></div>
+              <div class="cover t-orchard" style="--bg:#1f3b2d"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-orchard" /></svg><span class="ct">The Salt<br />Orchard</span><span class="ca">Mara Ellison</span></div>
+            </div>
+          </a>
+          <a class="cat" href="#bestsellers" style="--tint:#dde3ec">
+            <h3>Crime and thrillers</h3>
+            <div class="minis" aria-hidden="true">
+              <div class="cover t-tide" style="--bg:#d6e2df"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-tide" /></svg><span class="ct">The<br />Quiet<br />Tide</span><span class="ca">Jonah Reyes</span></div>
+              <div class="cover t-harbour" style="--bg:#0d0f13"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-harbour" /></svg><span class="ca">Elena Quinn</span><span class="ct">HARBOUR</span></div>
+            </div>
+          </a>
+          <a class="cat" href="#cookbooks" style="--tint:#f3e4c2">
+            <h3>Cookbooks</h3>
+            <div class="minis" aria-hidden="true">
+              <div class="cover t-lemon" style="--bg:#f6d35b"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-lemon" /></svg><span class="ct">Lemon<br />&amp; Thyme</span><span class="ca">Hattie Bell</span></div>
+              <div class="cover t-fire" style="--bg:#211c19"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-fire" /></svg><span class="ct">SLOW FIRE</span><span class="ca">Ruth Okafor</span></div>
+            </div>
+          </a>
+          <a class="cat" href="#bestsellers" style="--tint:#f5dcd6">
+            <h3>Children’s</h3>
+            <div class="minis" aria-hidden="true">
+              <div class="cover t-moons" style="--bg:#f3cfc8"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-moons" /></svg><span class="ct">Paper<br />Moons</span><span class="ca">Tolu Adeyemi</span></div>
+            </div>
+          </a>
+          <a class="cat" href="#bestsellers" style="--tint:#e9e1ec">
+            <h3>Non-fiction</h3>
+            <div class="minis" aria-hidden="true">
+              <div class="cover t-longway" style="--bg:#2e6b6b"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-longway" /></svg><span class="ct">The Long<br />Way Round</span><span class="ca">Sam Hale</span></div>
+              <div class="cover t-wonder" style="--bg:#f6efe4"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-wonder" /></svg><span class="ct">Field Notes<br />on Wonder</span><span class="ca">Priya Nair</span></div>
+            </div>
+          </a>
+          <a class="cat" href="#bestsellers" style="--tint:#e7e2da">
+            <h3>Gift cards</h3>
+            <div class="giftcard" aria-hidden="true">
+              <span class="brand-mark"><span></span><span></span></span>
+              <strong>Bookly</strong>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="bestsellers" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Bestsellers this week</h2>
+            <p>What Bookly readers are buying right now.</p>
+          </div>
+          <div class="head-actions">
+            <button class="arrow-btn" type="button" data-scroll="-1" aria-label="Scroll bestsellers left">
+              <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button class="arrow-btn" type="button" data-scroll="1" aria-label="Scroll bestsellers right">
+              <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <ol class="rail" id="rail">
+          <li class="product">
+            <div class="product-media"><span class="rank">1</span>
+              <div class="cover t-orchard" style="--bg:#1f3b2d"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-orchard" /></svg><span class="ct">The Salt<br />Orchard</span><span class="ca">Mara Ellison</span></div>
+            </div>
+            <h3>The Salt Orchard</h3><p class="author">Mara Ellison</p>
+            <div class="row"><p class="price">£16.99<span>Hardback</span></p><button class="add" type="button" data-add aria-label="Add The Salt Orchard to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">2</span>
+              <div class="cover t-harbour" style="--bg:#0d0f13"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-harbour" /></svg><span class="ca">Elena Quinn</span><span class="ct">HARBOUR</span><span class="cs">Some lights should stay off</span></div>
+            </div>
+            <h3>Harbour</h3><p class="author">Elena Quinn</p>
+            <div class="row"><p class="price">£8.99<span>Paperback</span></p><button class="add" type="button" data-add aria-label="Add Harbour to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">3</span>
+              <div class="cover t-hours" style="--bg:#17213a"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-hours" /></svg><span class="ct">Small Hours</span><span class="ca">Theo Lindqvist</span></div>
+            </div>
+            <h3>Small Hours</h3><p class="author">Theo Lindqvist</p>
+            <div class="row"><p class="price">£12.99<span>Paperback</span></p><button class="add" type="button" data-add aria-label="Add Small Hours to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">4</span><span class="tag">New</span>
+              <div class="cover t-lisbon" style="--bg:#f4eedf"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-lisbon" /></svg><span class="ct">A Kitchen<br />in Lisbon</span><span class="cs">Recipes from my grandmother’s table</span><span class="ca">Inês Carvalho</span></div>
+            </div>
+            <h3>A Kitchen in Lisbon</h3><p class="author">Inês Carvalho</p>
+            <div class="row"><p class="price">£22.00<span>Hardback</span></p><button class="add" type="button" data-add aria-label="Add A Kitchen in Lisbon to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">5</span>
+              <div class="cover t-northfield" style="--bg:#eef1ef"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-northfield" /></svg><span class="ct">Northfield</span><span class="ca">June Park</span></div>
+            </div>
+            <h3>Northfield</h3><p class="author">June Park</p>
+            <div class="row"><p class="price">£14.99<span>Hardback</span></p><button class="add" type="button" data-add aria-label="Add Northfield to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">6</span>
+              <div class="cover t-tide" style="--bg:#d6e2df"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-tide" /></svg><span class="ct">The<br />Quiet<br />Tide</span><span class="ca">Jonah Reyes</span></div>
+            </div>
+            <h3>The Quiet Tide</h3><p class="author">Jonah Reyes</p>
+            <div class="row"><p class="price">£9.99<span>Paperback</span></p><button class="add" type="button" data-add aria-label="Add The Quiet Tide to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">7</span>
+              <div class="cover t-wonder" style="--bg:#f6efe4"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-wonder" /></svg><span class="ct">Field Notes<br />on Wonder</span><span class="ca">Priya Nair</span></div>
+            </div>
+            <h3>Field Notes on Wonder</h3><p class="author">Priya Nair</p>
+            <div class="row"><p class="price">£16.99<span>Hardback</span></p><button class="add" type="button" data-add aria-label="Add Field Notes on Wonder to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+          <li class="product">
+            <div class="product-media"><span class="rank">8</span>
+              <div class="cover t-moons" style="--bg:#f3cfc8"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-moons" /></svg><span class="ct">Paper<br />Moons</span><span class="ca">Tolu Adeyemi</span></div>
+            </div>
+            <h3>Paper Moons</h3><p class="author">Tolu Adeyemi</p>
+            <div class="row"><p class="price">£7.99<span>Paperback</span></p><button class="add" type="button" data-add aria-label="Add Paper Moons to basket"><svg class="line icon-bag" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg><svg class="line icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg></button></div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="cookbooks" class="section">
+      <div class="wrap">
+        <div class="feature">
+          <div class="fan" aria-hidden="true">
+            <div class="cover t-lemon" style="--bg:#f6d35b"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-lemon" /></svg><span class="ct">Lemon<br />&amp; Thyme</span><span class="ca">Hattie Bell</span></div>
+            <div class="cover t-lisbon" style="--bg:#f4eedf"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-lisbon" /></svg><span class="ct">A Kitchen<br />in Lisbon</span><span class="cs">Recipes from my grandmother’s table</span><span class="ca">Inês Carvalho</span></div>
+            <div class="cover t-fire" style="--bg:#211c19"><svg class="cover-art" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice"><use href="#art-fire" /></svg><span class="ct">SLOW FIRE</span><span class="cs">Cooking with smoke and flame</span><span class="ca">Ruth Okafor</span></div>
+          </div>
+          <div>
+            <h2>Cook something new this winter</h2>
+            <p>From Lisbon kitchens to slow-smoked suppers, the cookbooks our booksellers keep reaching for. Bought one too many? Returns are easy for 30 days after delivery.</p>
+            <a class="btn btn-ink" href="#bestsellers">Shop cookbooks</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="help">
+          <div>
+            <h2>Need help with an order?</h2>
+            <p>Chat with Bookly’s assistant. Once you’ve verified your email it can see your orders and sort out the common things straight away.</p>
+            <ul class="points">
+              <li><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>Track a parcel and check a delivery date</li>
+              <li><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>Start a return in a couple of minutes</li>
+              <li><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>Hand over to a person when you need one</li>
+            </ul>
+            <a class="btn btn-cream" href="/" data-open-chat>Chat with Bookly</a>
+          </div>
+          <div class="mini-chat" aria-hidden="true">
+            <header>
+              <span class="brand-mark"><span></span><span></span></span>
+              <div><strong>Bookly assistant</strong><small>Online now</small></div>
+            </header>
+            <div class="body">
+              <div class="msg you">Hi, I ordered two cookbooks but I’d like to return one of them.</div>
+              <div class="msg bot">Of course. First I’ll verify your email so I can see your orders.</div>
+              <div class="typing"><span></span><span></span><span></span></div>
+            </div>
+            <div class="composer"><span>Message Bookly…</span><span><svg class="line" viewBox="0 0 24 24"><path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" /></svg></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a class="brand-lockup" href="/store" aria-label="Bookly home">
+            <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
+            <span class="brand">Bookly</span>
+          </a>
+          <p>An online bookshop for curious readers, delivering across the UK and to 20 countries abroad.</p>
+        </div>
+        <div>
+          <h4>Shop</h4>
+          <ul><li><a href="#bestsellers">Bestsellers</a></li><li><a href="#bestsellers">New releases</a></li><li><a href="#cookbooks">Cookbooks</a></li><li><a href="#categories">Gift cards</a></li></ul>
+        </div>
+        <div>
+          <h4>Help</h4>
+          <ul><li><a href="/" data-open-chat>Track an order</a></li><li><a href="/" data-open-chat>Start a return</a></li><li><a href="/" data-open-chat>Delivery and returns</a></li><li><a href="/" data-open-chat>Chat with Bookly</a></li></ul>
+        </div>
+        <div>
+          <h4>Bookly</h4>
+          <ul><li><a href="#categories">Our booksellers</a></li><li><a href="#categories">Book of the month</a></li><li><a href="#categories">Accessibility</a></li></ul>
+        </div>
+      </div>
+      <div class="footer-base">
+        <span>© 2026 Bookly</span>
+        <span>Bookly is a fictional bookseller made for a product demo. Books, customers, orders and payments are synthetic.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="launcher-wrap">
+    <div class="greeting" id="greeting">
+      <a class="greeting-link" href="/" data-open-chat><strong>Bookly assistant</strong>Hi there! Need help with an order or a return?</a>
+      <button class="greeting-close" id="greeting-close" type="button" aria-label="Dismiss message">×</button>
+    </div>
+    <a class="launcher" href="/" data-open-chat aria-label="Chat with Bookly">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
+      <span class="launcher-dot" aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div class="chat-veil" aria-hidden="true"></div>
+
+  <script>
+    (() => {
+      const debug = new URLSearchParams(window.location.search).get("debug") === "1";
+      const chatUrl = debug ? "/?debug=1" : "/";
+      const veil = document.querySelector(".chat-veil");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Open the support chat
+      document.querySelectorAll("[data-open-chat]").forEach((link) => {
+        link.setAttribute("href", chatUrl);
+        link.addEventListener("click", (event) => {
+          if (event.defaultPrevented) return;
+          if (reduceMotion || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          const box = link.getBoundingClientRect();
+          veil.style.setProperty("--x", `${box.left + box.width / 2}px`);
+          veil.style.setProperty("--y", `${box.top + box.height / 2}px`);
+          veil.classList.add("is-open");
+          window.setTimeout(() => { window.location.href = chatUrl; }, 460);
+        });
+      });
+      window.addEventListener("pageshow", () => veil.classList.remove("is-open"));
+
+      // Greeting bubble
+      const greeting = document.getElementById("greeting");
+      document.getElementById("greeting-close").addEventListener("click", () => greeting.classList.remove("show"));
+      window.setTimeout(() => greeting.classList.add("show"), reduceMotion ? 0 : 1800);
+
+      // Basket
+      const count = document.getElementById("basket-count");
+      let items = 0;
+      document.querySelectorAll("[data-add]").forEach((button) => {
+        const isText = !button.classList.contains("add");
+        const label = button.textContent;
+        button.addEventListener("click", () => {
+          items += 1;
+          count.textContent = String(items);
+          count.classList.add("bump");
+          window.setTimeout(() => count.classList.remove("bump"), 200);
+          button.classList.add("added");
+          if (isText) button.textContent = "Added to basket";
+          window.setTimeout(() => {
+            button.classList.remove("added");
+            if (isText) button.textContent = label;
+          }, 1600);
+        });
+      });
+
+      // Bestseller rail
+      const rail = document.getElementById("rail");
+      document.querySelectorAll("[data-scroll]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const step = rail.querySelector(".product").getBoundingClientRect().width + 24;
+          rail.scrollBy({ left: Number(button.dataset.scroll) * step * 2, behavior: reduceMotion ? "auto" : "smooth" });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -359,3 +359,8 @@ async def cancel_action(action_id: str, request: ActionConfirmRequest) -> dict:
 @app.get("/")
 async def index() -> FileResponse:
     return FileResponse(FRONTEND / "index.html")
+
+
+@app.get("/store")
+async def store() -> FileResponse:
+    return FileResponse(FRONTEND / "store.html")

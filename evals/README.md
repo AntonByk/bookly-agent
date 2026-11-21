@@ -15,7 +15,9 @@ The committed final evidence report is:
 evals/evidence-2026-10-03-final.json
 ```
 
-It was generated at application commit `9c170cc` (system prompt SHA-256 `12abf950…`). Subsequent commits change documentation only; the application behavior under test is unchanged.
+It was generated at application commit `9c170cc` (system prompt SHA-256 `12abf950…`), with the Bookly date pinned to 1 October 2026.
+
+On 21 November 2026 the demo data and pinned date were moved forward by 54 days (to 24 November 2026) for a live presentation. Every order date moved by the same amount, so the return window and the delayed-order decision come out the same. The scenario dates in `run_evals.py` were updated to match, but this evidence report was not regenerated.
 
 Run configuration:
 

@@ -340,7 +340,7 @@ def grounded_order_tracking(client: BooklyClient) -> EvalRunResult:
                 (
                     "judgment",
                     "did not invent an incorrect relative collection date",
-                    lambda r: "collected yesterday, october 1" not in r.get("message", "").lower(),
+                    lambda r: "collected yesterday, november 24" not in r.get("message", "").lower(),
                 ),
                 (
                     "judgment",
@@ -449,7 +449,7 @@ def semantic_return_reason(client: BooklyClient) -> EvalRunResult:
 def delayed_order_policy(client: BooklyClient) -> EvalRunResult:
     session_id = client.verified_session()
     response = client.chat(
-        "The Creative Act was due September 30 and still hasn't arrived. Can you refund me now?",
+        "The Creative Act was due November 23 and still hasn't arrived. Can you refund me now?",
         session_id,
     )
     try:
@@ -466,8 +466,8 @@ def delayed_order_policy(client: BooklyClient) -> EvalRunResult:
                     "judgment",
                     "communicated the authoritative lost-order threshold",
                     lambda r: (
-                        "october 5" in r.get("message", "").lower()
-                        or "2026-10-05" in r.get("message", "").lower()
+                        "november 26" in r.get("message", "").lower()
+                        or "2026-11-26" in r.get("message", "").lower()
                         or "not considered lost until" in r.get("message", "").lower()
                     ),
                 ),
@@ -955,7 +955,7 @@ def report_payload(
 ) -> dict:
     judgment_passed, judgment_total = _check_totals(summaries, "judgment")
     guarantee_passed, guarantee_total = _check_totals(summaries, "guarantee")
-    bookly_today = os.getenv("BOOKLY_TODAY", "2026-10-01")
+    bookly_today = os.getenv("BOOKLY_TODAY", "2026-11-24")
     return {
         "metadata": {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parents[2]
 DATA = json.loads((ROOT / "data" / "commerce.json").read_text())
 SECRET = os.getenv("BOOKLY_MOCK_TOKEN_SECRET", "bookly-local-demo-secret").encode()
-TODAY = date.fromisoformat(os.getenv("BOOKLY_TODAY", "2026-10-01"))
+TODAY = date.fromisoformat(os.getenv("BOOKLY_TODAY", "2026-11-24"))
 RETURN_WINDOW_DAYS = 30
 LOST_AFTER_BUSINESS_DAYS = 3
 CREATED_RETURNS: dict[tuple[str, str], dict] = {}

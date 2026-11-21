@@ -8,12 +8,12 @@ def test_lost_order_threshold_counts_business_days():
 
 
 def test_changed_mind_return_uses_delivery_date_and_policy_window():
-    order = {"delivered_at": "2026-09-28"}
+    order = {"delivered_at": "2026-11-21"}
     item = {"price_gbp": 24.99}
     verdict = eligibility(order, item, "changed_mind")
 
     assert verdict["eligible"] is True
-    assert verdict["eligible_until"] == "2026-10-28"
+    assert verdict["eligible_until"] == "2026-12-21"
     assert verdict["refund_timing"] == "after_item_received"
 
 

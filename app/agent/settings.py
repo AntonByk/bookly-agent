@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-5.6-luna"
     max_tool_iterations: int = 5
-    bookly_today: str = "2026-10-01"
+    bookly_today: str = "2026-11-24"
 
     public_demo: bool = False
     demo_rate_limit_requests: int = 30

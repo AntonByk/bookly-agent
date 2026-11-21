@@ -123,7 +123,7 @@ Bookly is a fictional retailer, so the brief leaves some product, policy and int
 - **Systems of record:** Bookly has separate sources for identity, commerce/order state and public support content. The prototype represents them with mocked Identity, Commerce and Knowledge services.
 - **Returns and delivery policy:** the 30-day return window and delayed/lost-order threshold are made-up Bookly policies for the exercise, owned by Commerce rather than inferred by the model.
 - **Human support:** a specialist support team exists for cases that require a person; the prototype models the handoff boundary rather than integrating a real contact-centre platform.
-- **Business date:** demo dates are pinned to **1 October 2026** so return windows, tracking language and delayed-order decisions are reproducible.
+- **Business date:** demo dates are pinned to **24 November 2026** so return windows, tracking language and delayed-order decisions are reproducible.
 - **Success:** because no baseline metrics were provided, I would validate a pilot on end-to-end resolution, unnecessary escalation, time to resolution, policy quality and CSAT rather than inventing target improvements.
 
 I treated the exercise as an assumed discovery conversation with a Head of CX, with Security and Finance also caring about the design.
@@ -166,7 +166,7 @@ The model never receives the customer access token. It calls application tools, 
 All demo behavior is pinned to:
 
 ```text
-BOOKLY_TODAY=2026-10-01
+BOOKLY_TODAY=2026-11-24
 ```
 
 This keeps delivery thresholds, return windows and relative-date behavior reproducible.
@@ -336,7 +336,7 @@ Recommended hosted configuration:
 OPENAI_API_KEY=<dedicated Bookly demo project key>
 OPENAI_MODEL=gpt-5.6-luna
 PUBLIC_DEMO=true
-BOOKLY_TODAY=2026-10-01
+BOOKLY_TODAY=2026-11-24
 BOOKLY_MOCK_TOKEN_SECRET=<random strong secret>
 DEMO_RATE_LIMIT_REQUESTS=300
 DEMO_RATE_LIMIT_WINDOW_SECONDS=600

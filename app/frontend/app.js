@@ -395,7 +395,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
       actions.innerHTML = "";
-      addMessage("assistant", data.message);
+      if (data.result && data.result.return_id) {
+        renderReturnSuccess(action, data.result);
+      } else {
+        addMessage("assistant", data.message);
+      }
       addTrace(data.trace || []);
     } catch (error) {
       buttons.forEach(button => { button.disabled = false; });
@@ -535,6 +539,114 @@ document.addEventListener("DOMContentLoaded", () => {
     actions.appendChild(card);
   }
 
+  function formatGBP(value) {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? `£${amount.toFixed(2)}` : "";
+  }
+
+  function renderReturnSuccess(action, result) {
+    clearWelcome();
+    const payload = action.payload || {};
+    const refund = formatGBP(result.refund_amount ?? payload.refund_amount);
+    const shipping = result.return_shipping || payload.return_shipping;
+    const refundTiming = result.refund_timing || payload.refund_timing;
+    const needsDropOff = result.status === "awaiting_drop_off" || shipping === "prepaid_label";
+    const orderId = result.order_id || payload.order_id;
+
+    const wrap = document.createElement("div");
+    wrap.className = "rich-card-wrap";
+
+    const card = document.createElement("section");
+    card.className = "success-card";
+    card.setAttribute("aria-label", `Return ${result.return_id} created`);
+
+    const header = document.createElement("div");
+    header.className = "success-header";
+
+    const icon = document.createElement("div");
+    icon.className = "success-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" /></svg>';
+
+    const heading = document.createElement("div");
+    heading.className = "success-heading";
+    const kicker = document.createElement("div");
+    kicker.className = "card-kicker success-kicker";
+    kicker.textContent = "Return created";
+    const title = document.createElement("h3");
+    title.textContent = payload.item_title || "Your return";
+    heading.append(kicker, title);
+
+    const reference = document.createElement("div");
+    reference.className = "success-reference";
+    const referenceLabel = document.createElement("span");
+    referenceLabel.textContent = "Return ID";
+    const referenceValue = document.createElement("strong");
+    referenceValue.textContent = result.return_id;
+    reference.append(referenceLabel, referenceValue);
+
+    header.append(icon, heading, reference);
+    card.appendChild(header);
+
+    const stats = document.createElement("div");
+    stats.className = "success-stats";
+    const statRows = [
+      ["Refund", refund],
+      ["Refund to", humanize(payload.refund_method || "original_payment_method")],
+      ["Status", needsDropOff ? "Waiting for drop-off" : "Approved"]
+    ];
+    for (const [label, value] of statRows) {
+      if (!value) continue;
+      const stat = document.createElement("div");
+      stat.className = "success-stat";
+      const labelEl = document.createElement("span");
+      labelEl.textContent = label;
+      const valueEl = document.createElement("strong");
+      valueEl.textContent = value;
+      stat.append(labelEl, valueEl);
+      stats.appendChild(stat);
+    }
+    card.appendChild(stats);
+
+    const next = document.createElement("div");
+    next.className = "success-next";
+    const nextTitle = document.createElement("div");
+    nextTitle.className = "card-kicker";
+    nextTitle.textContent = "What happens next";
+    const steps = document.createElement("ol");
+    steps.className = "success-steps";
+    const stepTexts = needsDropOff
+      ? [
+          "Pack the book with the prepaid return label.",
+          "Drop the parcel off for return.",
+          refundTiming === "after_item_received"
+            ? `Your ${refund} refund is issued to your original payment method once Bookly receives the book.`
+            : `Your ${refund} refund goes back to your original payment method.`
+        ]
+      : [
+          "There’s no need to send the book back.",
+          `Your ${refund} refund has been approved to your original payment method.`
+        ];
+    for (const text of stepTexts) {
+      const step = document.createElement("li");
+      step.textContent = text;
+      steps.appendChild(step);
+    }
+    next.append(nextTitle, steps);
+    card.appendChild(next);
+
+    const footer = document.createElement("div");
+    footer.className = "success-footer";
+    footer.textContent = orderId
+      ? `Created in Bookly’s order system for order ${orderId}`
+      : "Created in Bookly’s order system";
+    card.appendChild(footer);
+
+    wrap.appendChild(card);
+    messages.appendChild(wrap);
+    scrollConversation();
+  }
+
   function resetAuthDialog() {
     challengeId = null;
     authEmailStep.hidden = false;
@@ -559,12 +671,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dialog.open) dialog.close();
   }
 
-  function enterHumanHandoff() {
+  function enterHumanHandoff(payload = {}) {
     conversationLocked = true;
     actions.innerHTML = "";
     chatInput.disabled = true;
     sendButton.disabled = true;
     chatInput.placeholder = "Conversation handed to human support";
+
+    const summary = String(payload.summary || "").trim();
+    const verified = document.getElementById("session-state").classList.contains("verified");
+    document.getElementById("handoff-summary-text").textContent = summary;
+    document.getElementById("handoff-summary").hidden = !summary;
+    document.getElementById("handoff-check-summary").hidden = !summary;
+    document.getElementById("handoff-check-verified").hidden = !verified;
+    document.getElementById("handoff-checks").hidden = !summary && !verified;
 
     if (!handoffDialog.open) {
       handoffDialog.showModal();
@@ -618,7 +738,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const action of uiActions) {
       if (action.type === "human_handoff") {
-        enterHumanHandoff();
+        enterHumanHandoff(action.payload || {});
         continue;
       }
 
@@ -682,7 +802,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("new-demo-chat").addEventListener("click", startNewDemoChat);
-  document.getElementById("handoff-new-demo").addEventListener("click", startNewDemoChat);
+  document.getElementById("handoff-back").setAttribute("href", debugEnabled ? "/store?debug=1" : "/store");
+  document.getElementById("handoff-close").addEventListener("click", () => handoffDialog.close());
   document.getElementById("auth-close").addEventListener("click", closeAuthDialog);
   document.getElementById("auth-back").addEventListener("click", () => {
     authCodeStep.hidden = true;

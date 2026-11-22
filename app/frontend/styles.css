@@ -1274,3 +1274,262 @@ input:disabled {
     max-height: calc(100vh - 68px);
   }
 }
+
+/* Return created: success card */
+.success-card {
+  max-width: 660px;
+  overflow: hidden;
+  border: 1px solid #cfe4d8;
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 16px 44px rgba(38, 114, 85, 0.10);
+}
+
+.success-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #e3efe8;
+  background: linear-gradient(180deg, var(--success-bg), rgba(232, 245, 238, 0.35));
+}
+
+.success-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--success);
+  box-shadow: 0 0 0 6px rgba(38, 114, 85, 0.12);
+}
+
+.success-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: check-draw 420ms 140ms ease forwards;
+}
+
+.success-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.success-kicker {
+  color: var(--success);
+}
+
+.success-card h3 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -.02em;
+}
+
+.success-reference {
+  flex: none;
+  text-align: right;
+}
+
+.success-reference span {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 11px;
+}
+
+.success-reference strong {
+  display: block;
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px;
+  letter-spacing: .02em;
+}
+
+.success-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #f0eae2;
+}
+
+.success-stat {
+  padding: 14px 20px;
+  border-right: 1px solid #f0eae2;
+}
+
+.success-stat:last-child {
+  border-right: 0;
+}
+
+.success-stat span {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+.success-stat strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 680;
+}
+
+.success-stat:first-child strong {
+  font-size: 22px;
+  letter-spacing: -.02em;
+}
+
+.success-next {
+  padding: 16px 20px 4px;
+}
+
+.success-steps {
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  counter-reset: step;
+}
+
+.success-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  counter-increment: step;
+}
+
+.success-steps li::before {
+  content: counter(step);
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -1px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink-soft);
+  background: var(--surface-soft);
+  font-size: 11px;
+  font-weight: 720;
+}
+
+.success-footer {
+  padding: 14px 20px 16px;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+@keyframes check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Human handoff */
+.handoff-dialog {
+  width: min(calc(100% - 32px), 520px);
+  max-width: 520px;
+}
+
+.handoff-checks {
+  margin: -8px 0 18px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  list-style: none;
+}
+
+.handoff-checks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: var(--success);
+  background: var(--success-bg);
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.handoff-checks li[hidden] {
+  display: none;
+}
+
+.handoff-checks svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.handoff-summary {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  max-height: 168px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  text-align: left;
+}
+
+.handoff-summary p {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.handoff-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.handoff-actions .button {
+  text-decoration: none;
+}
+
+.handoff-note {
+  margin: 16px 0 0;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .success-header {
+    flex-wrap: wrap;
+  }
+
+  .success-reference {
+    text-align: left;
+    width: 100%;
+    padding-left: 56px;
+  }
+
+  .success-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .success-stat {
+    border-right: 0;
+    border-bottom: 1px solid #f0eae2;
+  }
+
+  .success-stat:last-child {
+    border-bottom: 0;
+  }
+}

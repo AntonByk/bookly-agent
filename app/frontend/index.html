@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#f4f0e8" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Bookly Concierge</title>
-  <link rel="stylesheet" href="/static/styles.css?v=1.2.0" />
-  <script src="/static/app.js?v=1.2.0" defer></script>
+  <link rel="stylesheet" href="/static/styles.css?v=1.3.0" />
+  <script src="/static/app.js?v=1.3.0" defer></script>
 </head>
 <body>
   <main class="app-shell">
@@ -139,22 +139,38 @@
     </div>
   </dialog>
 
-  <dialog id="handoff-dialog" class="modal handoff-dialog">
+  <dialog id="handoff-dialog" class="modal handoff-dialog" aria-labelledby="handoff-title">
     <div class="modal-card handoff-card">
       <div class="modal-icon handoff-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
-          <path d="M8 12h8M12 8v8" />
-          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="8.2" r="3.6" />
+          <path d="M5 20c1.1-3.4 3.8-5.2 7-5.2s5.9 1.8 7 5.2" />
         </svg>
       </div>
       <div class="modal-eyebrow">Human support</div>
-      <h2>A Bookly specialist will take over</h2>
+      <h2 id="handoff-title">You’re in good hands</h2>
       <p class="modal-copy">
-        For this demo, the AI stops here. In a live support flow, the specialist would receive this conversation, verified customer context, and relevant order details.
+        Your request is ready for a Bookly specialist. They’ll get a summary of this conversation, so you won’t need to repeat yourself.
       </p>
-      <button id="handoff-new-demo" class="button button-primary button-full" type="button">
-        Start a new chat
-      </button>
+      <ul id="handoff-checks" class="handoff-checks">
+        <li id="handoff-check-summary">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>
+          Conversation summary ready
+        </li>
+        <li id="handoff-check-verified">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>
+          Verified customer
+        </li>
+      </ul>
+      <div id="handoff-summary" class="handoff-summary" hidden>
+        <div class="card-kicker">What the specialist will see</div>
+        <p id="handoff-summary-text"></p>
+      </div>
+      <div class="handoff-actions">
+        <a id="handoff-back" class="button button-primary button-full" href="/store">Back to Bookly</a>
+        <button id="handoff-close" class="button button-ghost button-full" type="button">Close</button>
+      </div>
+      <p class="handoff-note">Demo simulation: no live specialist is connected.</p>
     </div>
   </dialog>
 </body>
